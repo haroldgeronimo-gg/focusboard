@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusBoard - Compact Glass</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'shimmer': 'shimmer 2s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        shimmer: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Material Symbols Rounded -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            --text-main: #1d1d1f;
+            --text-muted: #86868b;
+            --highlight: rgba(255, 255, 255, 0.4);
+            --accent-color: #007aff;
+            --card-bg: rgba(255, 255, 255, 0.5);
+            --column-bg: rgba(255, 255, 255, 0.2);
+            --button-bg: rgba(255, 255, 255, 0.3);
+        }
+
+        html.dark {
+            /* Dark Theme Variables */
+            --glass-bg: rgba(20, 20, 20, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            --text-main: #f5f5f7;
+            --text-muted: #a1a1a6;
+            --highlight: rgba(255, 255, 255, 0.1);
+            --accent-color: #0a84ff;
+            --card-bg: rgba(60, 60, 60, 0.4);
+            --column-bg: rgba(0, 0, 0, 0.2);
+            --button-bg: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Material Icons Styling */
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px; /* Smaller icons for compact look */
+            vertical-align: middle;
+        }
+
+        /* Base Background */
+        body {
+            background-color: #f2f2f7;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: var(--text-main);
+            transition: color 0.4s ease;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden; /* Prevent scrolling on body */
+        }
+        
+        .bg-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(0px);
+            z-index: -1;
+            transition: background 0.5s ease;
+        }
+        html.dark .bg-overlay {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Scrollbar */
+        *::-webkit-scrollbar { width: 4px; height: 4px; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        *::-webkit-scrollbar-thumb { background: var(--text-muted); opacity: 0.3; border-radius: 10px; }
+
+        /* Super Glassmorphism */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(50px) saturate(150%);
+            -webkit-backdrop-filter: blur(50px) saturate(150%);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            transition: all 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        .glass-card:hover {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+            background: var(--highlight);
+        }
+
+        /* Interactive Elements */
+        .glass-button {
+            background: var(--button-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-main);
+            border-radius: 12px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .glass-button:hover {
+            background: var(--text-main);
+            color: white;
+            transform: scale(1.05);
+            border-color: transparent;
+        }
+        html.dark .glass-button:hover { color: #000; }
+        
+        .glass-button:active { transform: scale(0.95); }
+
+        .glass-button.active-mode {
+            background: var(--text-main);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border-color: transparent;
+        }
+        html.dark .glass-button.active-mode { color: #000; }
+
+        .glass-input {
+            background: var(--button-bg);
+            backdrop-filter: blur(5px);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            background: var(--card-bg);
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .column {
+            background: var(--column-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+        .column.drag-over { background: var(--highlight); }
+
+        /* Sweet Alert Override */
+        .swal2-popup {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(40px) !important;
+            border-radius: 24px !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--glass-border) !important;
+        }
+        .swal2-title, .swal2-content { color: var(--text-main) !important; }
+        .swal2-confirm.swal2-styled {
+            background: var(--text-main) !important;
+            color: white !important;
+            border-radius: 12px !important;
+        }
+        html.dark .swal2-confirm.swal2-styled { color: black !important; }
+
+        /* Settings Popover */
+        .settings-popover {
+            transform-origin: top right;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0; pointer-events: none; transform: scale(0.9);
+        }
+        .settings-popover.open { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+        /* --- Focus Mode Styles --- */
+        body.focus-active #main-container {
+            background: transparent !important;
+            box-shadow: none !important;
+            border-color: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* Hide elements in focus mode */
+        body.focus-active #main-header,
+        body.focus-active #left-panel-input,
+        body.focus-active #col-wrapper-todo,
+        body.focus-active #col-wrapper-completed,
+        body.focus-active #col-wrapper-parked,
+        body.focus-active .column-header-info {
+            display: none !important;
+        }
+
+        /* Center elements in focus mode */
+        body.focus-active #content-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 2rem;
+        }
+
+        body.focus-active #left-panel-wrapper {
+            grid-column: span 12;
+            width: auto;
+            overflow: visible;
+        }
+
+        /* Bigger timer, no glass */
+        body.focus-active #left-panel-timer {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            transform: scale(1.4);
+            width: auto;
+            max-width: none;
+            padding: 0;
+        }
+
+        body.focus-active #left-panel-timer > div:first-child {
+            display: none; /* Hide mode toggles */
+        }
+
+        body.focus-active #timer-display {
+            font-size: 8rem;
+            font-weight: 100;
+            margin-bottom: 1rem;
+        }
+
+        /* Minimal controls in focus mode */
+        body.focus-active #btn-toggle,
+        body.focus-active .reset-btn-ui {
+            background: transparent !important;
+            border: 2px solid var(--text-main) !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+            display: flex !important; /* Ensure they remain visible */
+            color: var(--text-main) !important;
+        }
+
+        body.focus-active #right-panel-kanban {
+            grid-column: span 12;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            height: auto;
+            overflow: visible;
+        }
+        
+        body.focus-active #kanban-grid {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        /* Focus Section: No glass, centered text */
+        body.focus-active #col-wrapper-ongoing {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        body.focus-active div[data-status="ongoing"] {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        body.focus-active .ongoing-task-card {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            text-align: center;
+            padding: 0.5rem;
+            width: 100%;
+        }
+
+        body.focus-active .task-text {
+            font-size: 1.5rem;
+            font-weight: 300;
+            padding-right: 0 !important;
+            color: var(--text-main);
+            text-align: center;
+            width: auto;
+        }
+
+        /* Specifically hide the task action buttons in focus mode, but not timer buttons */
+        body.focus-active .ongoing-task-card .task-action-btn {
+            display: none !important;
+        }
+
+        /* Focus Checkbox Styles */
+        .focus-mode-checkbox {
+            display: none;
+        }
+        body.focus-active .focus-mode-checkbox {
+            display: block;
+            appearance: none;
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--text-main);
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            margin-right: 1.5rem;
+        }
+        body.focus-active .focus-mode-checkbox:checked {
+            background-color: var(--text-main);
+        }
+        body.focus-active .focus-mode-checkbox:checked::after {
+            content: 'done';
+            font-family: 'Material Symbols Rounded';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--glass-bg);
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Work Day Widget Minimal - Focus Mode */
+        body.focus-active #left-panel-workday {
+            position: fixed;
+            bottom: 40px;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 300px;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            z-index: 40;
+            padding: 0;
+            gap: 8px;
+            display: flex !important; /* Ensure visibility */
+            flex-direction: column !important; /* Enforce vertical stacking */
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important; /* Enforce text centering */
+        }
+        /* Ensure internal rows center their content in focus mode */
+        body.focus-active #left-panel-workday > div.flex {
+            justify-content: center !important;
+            width: 100%;
+            margin: 0 auto;
+        }
+        body.focus-active #left-panel-workday span.uppercase, /* Hide "Day Progress" label */
+        body.focus-active #work-start-display,
+        body.focus-active #work-end-display {
+            display: none !important;
+        }
+        body.focus-active #left-panel-workday #work-progress-bar {
+            background: var(--text-main);
+            opacity: 0.8;
+        }
+        body.focus-active #left-panel-workday #lunch-marker {
+            background: rgba(250, 204, 21, 0.5); /* Semi-transparent yellow */
+        }
+        
+        /* Lunch Marker */
+        #lunch-marker {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            background-color: rgba(250, 204, 21, 0.6);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Exit Button */
+        #exit-focus-btn {
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s ease;
+            transform: translateY(-20px);
+        }
+        body.focus-active #exit-focus-btn {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 sm:p-6">
+    <div class="bg-overlay"></div>
+
+    <!-- Exit Focus Button (Fixed, Floating) -->
+    <button id="exit-focus-btn" onclick="toggleFocusMode()" class="fixed top-6 z-50 glass-button px-6 py-2 rounded-full font-bold shadow-2xl bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20">
+        Exit Focus
+    </button>
+
+    <!-- Main Container: Expanded Width -->
+    <div id="main-container" class="w-full max-w-7xl h-[90vh] flex flex-col p-6 overflow-hidden relative transition-all duration-700 ease-in-out">
+        
+        <!-- Header -->
+        <header id="main-header" class="flex justify-between items-center mb-6 shrink-0 z-10 transition-all duration-500 ease-in-out origin-top">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md shadow-sm">
+                    <span class="material-symbols-rounded text-2xl">timer</span>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight opacity-90">FocusBoard</h1>
+            </div>
+            
+            <div class="flex gap-2">
+                <!-- Focus Toggle -->
+                <button onclick="toggleFocusMode()" class="glass-button w-9 h-9 flex items-center justify-center text-indigo-500 border-indigo-200 hover:bg-indigo-500 hover:text-white" title="Enter Focus Mode">
+                    <span class="material-symbols-rounded">center_focus_strong</span>
+                </button>
+
+                <button onclick="toggleSettings()" class="glass-button w-9 h-9 flex items-center justify-center" title="Settings">
+                    <span class="material-symbols-rounded">tune</span>
+                </button>
+                <div id="settings-menu" class="settings-popover absolute top-16 right-6 w-64 glass-panel p-4 z-50 flex flex-col gap-4 shadow-2xl">
+                    <!-- Wallpaper Settings -->
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Wallpaper</span>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="setBackground('default')" class="h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 border border-black/5 hover:scale-110 transition"></button>
+                            <button onclick="setBackground('nature')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=200&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition"></button>
+                            <button onclick="setBackground('abstract')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=200&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition"></button>
+                            <button onclick="setBackground('minimal')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=200&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition"></button>
+                        </div>
+                        <label class="glass-button w-full py-2 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer mt-2">
+                            <span class="material-symbols-rounded text-base">upload_file</span> Custom
+                            <input type="file" id="bg-upload" accept="image/*" class="hidden" onchange="handleBgUpload(event)">
+                        </label>
+                    </div>
+
+                    <!-- Work Shift Settings -->
+                    <div class="border-t border-gray-400/20 pt-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Work Shift</span>
+                        <div class="flex gap-2 px-1 mb-2">
+                            <div class="flex-1">
+                                <label class="text-[9px] opacity-60 block mb-1">Start</label>
+                                <input type="time" id="shift-start" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-[9px] opacity-60 block mb-1">End</label>
+                                <input type="time" id="shift-end" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
+                            </div>
+                        </div>
+                        
+                        <!-- Break Time Settings -->
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Break Time</span>
+                        <div class="flex gap-2 px-1">
+                            <div class="flex-1">
+                                <label class="text-[9px] opacity-60 block mb-1">Start</label>
+                                <input type="time" id="break-start" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-[9px] opacity-60 block mb-1">End</label>
+                                <input type="time" id="break-end" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="toggleDarkMode()" class="glass-button w-9 h-9 flex items-center justify-center" title="Theme">
+                    <span id="theme-icon" class="material-symbols-rounded">dark_mode</span>
+                </button>
+                <button onclick="generateReport()" class="glass-button w-9 h-9 flex items-center justify-center" title="Report">
+                    <span class="material-symbols-rounded">description</span>
+                </button>
+                <button onclick="clearAllData()" class="glass-button w-9 h-9 flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500 hover:border-red-500 border-red-200" title="Clear">
+                    <span class="material-symbols-rounded">delete_sweep</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Grid -->
+        <div id="content-grid" class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-6 transition-all duration-700 ease-in-out">
+            
+            <!-- Left: Controls (Timer & Input) -->
+            <div id="left-panel-wrapper" class="md:col-span-4 flex flex-col gap-4 transition-all duration-500">
+                
+                <!-- Compact Timer -->
+                <div id="left-panel-timer" class="glass-card p-6 flex flex-col items-center relative group transition-all duration-700 ease-in-out">
+                    <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-2xl"></div>
+                    
+                    <div class="flex gap-1 mb-4 bg-black/5 p-1 rounded-xl w-full">
+                        <button onclick="setTimerMode('pomodoro')" id="btn-pomodoro" class="glass-button active-mode flex-1 py-1.5 text-[10px] font-bold shadow-none border-none rounded-lg">Focus</button>
+                        <button onclick="setTimerMode('shortBreak')" id="btn-shortBreak" class="glass-button flex-1 py-1.5 text-[10px] font-bold shadow-none border-none rounded-lg">Short</button>
+                        <button onclick="setTimerMode('longBreak')" id="btn-longBreak" class="glass-button flex-1 py-1.5 text-[10px] font-bold shadow-none border-none rounded-lg">Long</button>
+                    </div>
+
+                    <div id="timer-display" class="text-6xl font-extralight tracking-tight mb-5 tabular-nums">25:00</div>
+
+                    <div class="flex gap-3">
+                        <button onclick="toggleTimer()" id="btn-toggle" class="w-12 h-12 rounded-full bg-[var(--text-main)] text-[var(--glass-bg)] flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shadow-lg">
+                            <span id="icon-play" class="material-symbols-rounded text-2xl ml-0.5">play_arrow</span>
+                        </button>
+                        <button onclick="resetTimer()" class="reset-btn-ui w-10 h-10 rounded-full glass-button flex items-center justify-center opacity-60 hover:opacity-100">
+                            <span class="material-symbols-rounded text-xl">restart_alt</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Work Day Widget -->
+                <div id="left-panel-workday" class="glass-card p-4 flex flex-col gap-2 transition-all duration-500 origin-top">
+                    <div class="flex justify-between items-end">
+                        <span class="text-[10px] font-bold opacity-60 uppercase tracking-wider">Day Progress</span>
+                        <span id="work-remaining" class="text-[10px] font-bold opacity-80 tabular-nums">-- left</span>
+                    </div>
+                    <div class="h-2.5 w-full bg-black/5 rounded-full overflow-hidden relative">
+                        <!-- Lunch Marker (Range) -->
+                        <div id="lunch-marker" class="absolute top-0 bottom-0" style="display: none;" title="Break Time"></div>
+                        <div id="work-progress-bar" class="h-full bg-[var(--accent-color)] w-0 transition-all duration-1000 ease-out rounded-full relative z-20 mix-blend-multiply dark:mix-blend-normal">
+                            <div class="absolute inset-0 bg-white/20 animate-shimmer"></div> 
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-[10px] opacity-50 font-medium">
+                        <span id="work-start-display">09:00</span>
+                        <div id="clock-display" class="font-bold opacity-100 text-xs text-[var(--text-main)]">12:00</div>
+                        <span id="work-end-display">18:00</span>
+                    </div>
+                </div>
+
+                <!-- Input -->
+                <div id="left-panel-input" class="glass-card p-4 transition-all duration-500 ease-in-out origin-top">
+                    <form onsubmit="addTask(event)" class="relative">
+                        <input type="text" id="task-input" placeholder="Add new task..." class="w-full glass-input pl-3 pr-10 py-3 text-sm font-medium placeholder-opacity-50">
+                        <button type="submit" class="absolute right-2 top-2 w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">
+                            <span class="material-symbols-rounded">add_circle</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Kanban Columns -->
+            <div id="right-panel-kanban" class="md:col-span-8 h-full min-h-0 transition-all duration-500">
+                <div id="kanban-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 h-full transition-all duration-500">
+                    
+                    <!-- To Do -->
+                    <div id="col-wrapper-todo" class="flex flex-col h-full column p-2 transition-all duration-500 ease-in-out">
+                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info">
+                            <span class="text-[10px] font-bold uppercase tracking-wider">To Do</span>
+                            <span id="count-todo" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
+                        </div>
+                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2" data-status="todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+                    </div>
+
+                    <!-- Ongoing (Focus Section) -->
+                    <div id="col-wrapper-ongoing" class="flex flex-col h-full column p-2 transition-all duration-700 ease-in-out border-indigo-200/30">
+                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info">
+                            <span class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> Focus
+                            </span>
+                            <span id="count-ongoing" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
+                        </div>
+                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2" data-status="ongoing" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+                    </div>
+
+                    <!-- Completed -->
+                    <div id="col-wrapper-completed" class="flex flex-col h-full column p-2 transition-all duration-500 ease-in-out">
+                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info">
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Done</span>
+                            <span id="count-completed" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
+                        </div>
+                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2" data-status="completed" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+                    </div>
+
+                    <!-- Parked -->
+                    <div id="col-wrapper-parked" class="flex flex-col h-full column p-2 transition-all duration-500 ease-in-out">
+                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info">
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Later</span>
+                            <span id="count-parked" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
+                        </div>
+                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2" data-status="parked" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="glass-panel fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-32 opacity-0 transition-all duration-300 flex items-center gap-2 px-5 py-2.5 rounded-full z-50 text-sm font-medium shadow-2xl">
+        <span class="material-symbols-rounded text-green-500 text-lg">check_circle</span>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <!-- Audio -->
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+    <script>
+        // --- State ---
+        let tasks = [];
+        let timer = { timeLeft: 25 * 60, originalTime: 25 * 60, isRunning: false, intervalId: null, mode: 'pomodoro' };
+        const MODES = { pomodoro: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
+        let wakeLock = null;
+        let isFocusMode = false;
+        let shiftSettings = { start: '09:00', end: '18:00', breakStart: '12:00', breakEnd: '13:00' };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData(); loadSettings(); renderBoard(); updateTimerDisplay(); requestWakeLock();
+            updateWorkDay(); setInterval(updateWorkDay, 60000); // Update work day every minute
+            document.addEventListener('click', (e) => {
+                const menu = document.getElementById('settings-menu');
+                const btn = e.target.closest('button');
+                if (!menu.contains(e.target) && (!btn || !btn.title.includes('Settings'))) menu.classList.remove('open');
+            });
+        });
+
+        // --- Work Day Logic ---
+        function updateWorkDay() {
+            const now = new Date();
+            const nowTime = now.getHours() * 60 + now.getMinutes();
+            
+            // Parse settings
+            const [startH, startM] = shiftSettings.start.split(':').map(Number);
+            const [endH, endM] = shiftSettings.end.split(':').map(Number);
+            const [bStartH, bStartM] = shiftSettings.breakStart.split(':').map(Number);
+            const [bEndH, bEndM] = shiftSettings.breakEnd.split(':').map(Number);
+            
+            const startTime = startH * 60 + startM;
+            const endTime = endH * 60 + endM;
+            const totalDuration = endTime - startTime;
+            
+            const breakStartTime = bStartH * 60 + bStartM;
+            const breakEndTime = bEndH * 60 + bEndM;
+            
+            // Update Clock
+            document.getElementById('clock-display').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            // Calculate Break Range Marker
+            if (totalDuration > 0) {
+                const breakStartPct = Math.max(0, ((breakStartTime - startTime) / totalDuration) * 100);
+                const breakEndPct = Math.min(100, ((breakEndTime - startTime) / totalDuration) * 100);
+                const breakWidthPct = breakEndPct - breakStartPct;
+                
+                const marker = document.getElementById('lunch-marker');
+                if (breakWidthPct > 0) {
+                    marker.style.left = `${breakStartPct}%`;
+                    marker.style.width = `${breakWidthPct}%`;
+                    marker.style.display = 'block';
+                } else {
+                    marker.style.display = 'none';
+                }
+            } else {
+                document.getElementById('lunch-marker').style.display = 'none';
+            }
+
+            let percentage = 0;
+            let text = "";
+            let onBreak = false; // flag for active break
+            const bar = document.getElementById('work-progress-bar');
+
+            // Reset bar colors first
+            bar.classList.remove('bg-yellow-400', 'bg-red-500', 'bg-[var(--accent-color)]');
+
+            if (nowTime < startTime) {
+                // Before Shift: Countdown
+                percentage = 0;
+                const diff = startTime - nowTime;
+                const h = Math.floor(diff / 60);
+                const m = diff % 60;
+                text = `Starts in ${h > 0 ? h + 'h ' : ''}${m}m`;
+                bar.classList.add('bg-[var(--accent-color)]');
+
+            } else if (nowTime > endTime) {
+                // Overtime: Count up
+                percentage = 100;
+                const diff = nowTime - endTime;
+                const h = Math.floor(diff / 60);
+                const m = diff % 60;
+                text = `+ ${h > 0 ? h + 'h ' : ''}${m}m Overtime`;
+                bar.classList.add('bg-red-500');
+
+            } else {
+                // During Shift
+                const elapsed = nowTime - startTime;
+                percentage = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+                
+                // Check if currently on break
+                if (nowTime >= breakStartTime && nowTime < breakEndTime) {
+                    onBreak = true;
+                    text = "Lunch Break 🍱";
+                    bar.classList.add('bg-yellow-400');
+                } else {
+                    const remaining = endTime - nowTime;
+                    const rHours = Math.floor(remaining / 60);
+                    const rMins = remaining % 60;
+                    text = `${rHours}h ${rMins}m left`;
+                    bar.classList.add('bg-[var(--accent-color)]');
+                }
+            }
+
+            bar.style.width = `${percentage}%`;
+            document.getElementById('work-remaining').innerText = text;
+        }
+
+        function saveShiftSettings() {
+            const start = document.getElementById('shift-start').value;
+            const end = document.getElementById('shift-end').value;
+            const breakStart = document.getElementById('break-start').value;
+            const breakEnd = document.getElementById('break-end').value;
+            
+            if(start && end && breakStart && breakEnd) {
+                shiftSettings = { start, end, breakStart, breakEnd };
+                localStorage.setItem('focusBoardShift', JSON.stringify(shiftSettings));
+                updateShiftUI();
+                updateWorkDay();
+            }
+        }
+
+        function updateShiftUI() {
+            document.getElementById('shift-start').value = shiftSettings.start;
+            document.getElementById('shift-end').value = shiftSettings.end;
+            document.getElementById('break-start').value = shiftSettings.breakStart;
+            document.getElementById('break-end').value = shiftSettings.breakEnd;
+            
+            document.getElementById('work-start-display').innerText = shiftSettings.start;
+            document.getElementById('work-end-display').innerText = shiftSettings.end;
+        }
+
+        // --- Focus Mode Logic ---
+        function toggleFocusMode() {
+            isFocusMode = !isFocusMode;
+            document.body.classList.toggle('focus-active');
+            
+            if(isFocusMode) {
+                showToast('Focus Mode Active');
+            } else {
+                showToast('Focus Mode Exited');
+            }
+            renderBoard(); // Re-render to apply class changes for focus mode
+        }
+
+        function completeTaskFromFocus(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.status = 'completed';
+                saveData();
+                showToast('Task Completed!');
+                // Re-render board immediately
+                renderBoard();
+            }
+        }
+
+        // --- Settings ---
+        function toggleSettings() { document.getElementById('settings-menu').classList.toggle('open'); }
+        function setBackground(type) {
+            if (type === 'default') document.body.style.background = 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)';
+            else if (type === 'nature') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2560&auto=format&fit=crop')";
+            else if (type === 'abstract') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2560&auto=format&fit=crop')";
+            else if (type === 'minimal') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=2560&auto=format&fit=crop')";
+            
+            if(type !== 'default') {
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+            }
+            localStorage.setItem('focusBoardBgType', type);
+            if(type !== 'custom') localStorage.removeItem('focusBoardBgCustom');
+            toggleSettings();
+        }
+        function handleBgUpload(e) {
+            const file = e.target.files[0];
+            if(!file || file.size > 4*1024*1024) return Swal.fire({icon:'error', text:'Image too large (Max 4MB)'});
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const res = evt.target.result;
+                document.body.style.backgroundImage = `url(${res})`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                try { localStorage.setItem('focusBoardBgType', 'custom'); localStorage.setItem('focusBoardBgCustom', res); } catch(err){};
+            };
+            reader.readAsDataURL(file);
+            toggleSettings();
+        }
+        function loadSettings() {
+            loadTheme();
+            const type = localStorage.getItem('focusBoardBgType') || 'default';
+            if(type === 'custom') {
+                const bg = localStorage.getItem('focusBoardBgCustom');
+                if(bg) { document.body.style.backgroundImage = `url(${bg})`; document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center'; }
+            } else setBackground(type);
+
+            // Load Shift Settings
+            try {
+                const savedShift = JSON.parse(localStorage.getItem('focusBoardShift'));
+                if(savedShift) shiftSettings = savedShift;
+            } catch(e) {}
+            updateShiftUI();
+        }
+
+        // --- Wake Lock ---
+        async function requestWakeLock() {
+            if('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch(err){} }
+        }
+        document.addEventListener('visibilitychange', async () => { if(wakeLock !== null && document.visibilityState === 'visible') await requestWakeLock(); });
+
+        // --- Theme ---
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            document.getElementById('theme-icon').innerText = html.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+            localStorage.setItem('focusBoardTheme', html.classList.contains('dark') ? 'dark' : 'light');
+        }
+        function loadTheme() {
+            const theme = localStorage.getItem('focusBoardTheme');
+            if(theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').innerText = 'light_mode';
+            } else document.getElementById('theme-icon').innerText = 'dark_mode';
+        }
+
+        // --- Tasks ---
+        function addTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('task-input');
+            const text = input.value.trim();
+            if (text) {
+                tasks.push({ id: Date.now().toString(), text, status: 'todo' });
+                saveData(); renderBoard(); input.value = ''; showToast('Task Added');
+            }
+        }
+        function deleteTask(id) {
+            Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', width: 300 }).then((res) => {
+                if(res.isConfirmed) { tasks = tasks.filter(t => t.id !== id); saveData(); renderBoard(); }
+            });
+        }
+        function enableEdit(id) {
+            const p = document.getElementById(id).querySelector('p');
+            const input = document.createElement('input');
+            input.value = p.innerText;
+            input.className = 'w-full bg-transparent border-b border-[var(--text-main)] outline-none text-sm';
+            input.onblur = () => { if(input.value.trim()) { tasks.find(t=>t.id===id).text = input.value.trim(); saveData(); renderBoard(); } else renderBoard(); };
+            input.onkeydown = (e) => { if(e.key === 'Enter') input.blur(); };
+            p.replaceWith(input); input.focus();
+        }
+        
+        // --- Drag Drop ---
+        let draggedItem = null;
+        function dragStart(e) { draggedItem = this; setTimeout(() => this.classList.add('opacity-50'), 0); }
+        function dragEnd() { this.classList.remove('opacity-50'); draggedItem = null; document.querySelectorAll('.column > div:first-child').forEach(c => c.classList.remove('bg-white/20')); }
+        function allowDrop(e) { e.preventDefault(); }
+        function dragEnter(e) { e.preventDefault(); } 
+        function dragLeave(e) {}
+        function drop(e) {
+            e.preventDefault();
+            const col = e.target.closest('[data-status]');
+            if(col && draggedItem) {
+                const status = col.getAttribute('data-status');
+                tasks.find(t => t.id === draggedItem.id).status = status;
+                saveData(); renderBoard();
+            }
+        }
+
+        function renderBoard() {
+            const cols = { todo: document.querySelector('[data-status="todo"]'), ongoing: document.querySelector('[data-status="ongoing"]'), completed: document.querySelector('[data-status="completed"]'), parked: document.querySelector('[data-status="parked"]') };
+            Object.values(cols).forEach(c => c.innerHTML = '');
+            const counts = { todo: 0, ongoing: 0, completed: 0, parked: 0 };
+            
+            tasks.forEach(task => {
+                const el = document.createElement('div');
+                const isOngoing = task.status === 'ongoing';
+                // Added ongoing-task-card class to target specifically in focus mode CSS
+                el.className = `glass-card p-3 mb-2 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''}`;
+                el.draggable = true; el.id = task.id;
+                
+                el.innerHTML = `
+                    <div class="flex items-center ${isOngoing ? 'justify-center' : 'justify-between'} w-full">
+                        ${isOngoing ? `
+                            <input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">
+                        ` : ''}
+                        <p class="task-text text-xs font-medium leading-relaxed break-words ${isOngoing ? '' : 'pr-4'}" ondblclick="enableEdit('${task.id}')" title="Double click to edit">${task.text}</p>
+                        ${!isOngoing ? `
+                            <button onclick="deleteTask('${task.id}')" class="task-action-btn opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-red-400 hover:text-red-600"><span class="material-symbols-rounded text-sm">close</span></button>
+                        ` : ''}
+                    </div>`;
+                
+                el.addEventListener('dragstart', dragStart); el.addEventListener('dragend', dragEnd);
+                if(cols[task.status]) { cols[task.status].appendChild(el); counts[task.status]++; }
+            });
+            Object.keys(counts).forEach(k => document.getElementById(`count-${k}`).innerText = counts[k]);
+        }
+
+        // --- Timer ---
+        function setTimerMode(m) { stopTimer(); timer.mode = m; timer.timeLeft = MODES[m]; timer.originalTime = MODES[m]; 
+            document.querySelectorAll('#btn-pomodoro, #btn-shortBreak, #btn-longBreak').forEach(b => b.classList.remove('active-mode'));
+            document.getElementById(`btn-${m}`).classList.add('active-mode');
+            updateTimerDisplay();
+        }
+        function toggleTimer() { timer.isRunning ? stopTimer() : startTimer(); }
+        function startTimer() { if(timer.isRunning) return; timer.isRunning = true; document.getElementById('icon-play').innerText = 'pause'; timer.intervalId = setInterval(() => { if(timer.timeLeft > 0) { timer.timeLeft--; updateTimerDisplay(); } else completeTimer(); }, 1000); requestWakeLock(); }
+        function stopTimer() { timer.isRunning = false; clearInterval(timer.intervalId); document.getElementById('icon-play').innerText = 'play_arrow'; document.title = "FocusBoard"; }
+        function resetTimer() { stopTimer(); timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
+        function updateTimerDisplay() {
+            const m = Math.floor(timer.timeLeft / 60).toString().padStart(2,'0');
+            const s = (timer.timeLeft % 60).toString().padStart(2,'0');
+            document.getElementById('timer-display').innerText = `${m}:${s}`;
+            if(timer.isRunning) document.title = `(${m}:${s}) FocusBoard`;
+        }
+        function completeTimer() { stopTimer(); document.getElementById('alarm-sound').play().catch(()=>{}); showToast("Timer Finished!"); timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
+
+        // --- Utils ---
+        function generateReport() {
+            const d = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const completed = tasks.filter(t => t.status === 'completed');
+            const todo = tasks.filter(t => t.status === 'todo' || t.status === 'ongoing');
+            const parked = tasks.filter(t => t.status === 'parked');
+
+            let parts = [d];
+            if (completed.length > 0) parts.push(`Completed:\n${completed.map(t => `-${t.text}`).join('\n')}`);
+            if (todo.length > 0) parts.push(`To do:\n${todo.map(t => `-${t.text}`).join('\n')}`);
+            if (parked.length > 0) parts.push(`Parked:\n${parked.map(t => `-${t.text}`).join('\n')}`);
+            
+            const txt = parts.join('\n\n');
+            const el = document.createElement('textarea'); el.value = txt; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            showToast('Report Copied');
+        }
+        function saveData() { localStorage.setItem('pomodoroKanbanTasks', JSON.stringify(tasks)); }
+        function loadData() { try { tasks = JSON.parse(localStorage.getItem('pomodoroKanbanTasks')) || []; } catch(e) { tasks = []; } }
+        function clearAllData() { Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed) { tasks=[]; saveData(); renderBoard(); showToast('Cleared'); }}); }
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            t.classList.remove('translate-y-32', 'opacity-0');
+            setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500);
+        }
+    </script>
+</body>
+</html>
