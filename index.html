@@ -805,7 +805,15 @@
                 if (menu && !menu.contains(e.target) && (!btn || !btn.title.includes('Settings'))) menu.classList.remove('open');
             });
         });
-
+        // Request notification permission
+        document.addEventListener('DOMContentLoaded', () => {
+            if ("Notification" in window) {
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+            }
+        });
+        
         function updateWorkDay() {
             const now = new Date();
             const nowTime = now.getHours() * 60 + now.getMinutes();
@@ -1014,7 +1022,14 @@
             const d = document.getElementById('timer-display'); if (d) d.innerText = `${m}:${s}`;
             if(timer.isRunning) document.title = `(${m}:${s}) FocusBoard`;
         }
-        function completeTimer() { stopTimer(); const a = document.getElementById('alarm-sound'); if(a) a.play().catch(()=>{}); showToast("Timer Finished!"); timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
+        function completeTimer() { stopTimer(); const a = document.getElementById('alarm-sound'); if(a) a.play().catch(()=>{}); showToast("Timer Finished!"); 
+                                  if ("Notification" in window && Notification.permission === "granted") {
+                                            new Notification("FocusBoard", {
+                                                body: "Time's up! Take a break or start a new session.",
+                                                icon: "https://cdn-icons-png.flaticon.com/512/2553/2553391.png"
+                                            });
+                                    }
+                                  timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
 
         function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('focusBoardTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }
         function loadTheme() { if(localStorage.getItem('focusBoardTheme') === 'dark') document.documentElement.classList.add('dark'); }
