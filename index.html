@@ -16,7 +16,7 @@
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
-                        'shimmer': 'shimmer 2s linear infinite',
+                        'shimmer': 'shimmer 2.5s infinite ease-in-out',
                     },
                     keyframes: {
                         float: {
@@ -138,13 +138,13 @@
         .tag-yellow { border-left: 4px solid #ffcc00 !important; background-color: rgba(255, 204, 0, 0.15) !important; }
         .tag-purple { border-left: 4px solid #af52de !important; background-color: rgba(175, 82, 222, 0.15) !important; }
 
-        /* Interactive Elements */
+        /* Interactive Elements - Set to Rounded Full */
         .glass-button {
             background: var(--button-bg);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             color: var(--text-main);
-            border-radius: 12px;
+            border-radius: 9999px; /* Rounded buttons */
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid var(--glass-border);
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
@@ -171,7 +171,7 @@
             background: var(--button-bg);
             backdrop-filter: blur(5px);
             border: 1px solid transparent;
-            border-radius: 12px;
+            border-radius: 9999px; /* Rounded inputs */
             color: var(--text-main);
             transition: all 0.3s ease;
         }
@@ -211,7 +211,10 @@
         .swal2-confirm.swal2-styled {
             background: var(--text-main) !important;
             color: white !important;
-            border-radius: 12px !important;
+            border-radius: 9999px !important; /* Rounded confirm button */
+        }
+        .swal2-cancel.swal2-styled {
+            border-radius: 9999px !important; /* Rounded cancel button */
         }
         html.dark .swal2-confirm.swal2-styled { color: black !important; }
 
@@ -488,7 +491,7 @@
         <!-- Header -->
         <header id="main-header" class="flex justify-between items-center mb-6 shrink-0 z-10 transition-all duration-500 ease-in-out origin-top">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md shadow-sm">
+                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md shadow-sm">
                     <span class="material-symbols-rounded text-2xl">timer</span>
                 </div>
                 <h1 class="text-xl font-bold tracking-tight opacity-90">FocusBoard</h1>
@@ -584,10 +587,10 @@
             <div id="left-panel-wrapper" class="md:col-span-4 flex flex-col gap-4 transition-all duration-500">
                 <div id="left-panel-timer" class="glass-card p-6 flex flex-col items-center relative group transition-all duration-700 ease-in-out">
                     <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-2xl"></div>
-                    <div class="flex gap-1 mb-4 bg-black/5 p-1 rounded-xl w-full">
-                        <button onclick="setTimerMode('pomodoro')" id="btn-pomodoro" class="glass-button active-mode flex-1 py-1.5 text-[10px] font-bold shadow-none border-none rounded-lg">Focus</button>
-                        <button onclick="setTimerMode('shortBreak')" id="btn-shortBreak" class="glass-button flex-1 py-1.5 text-[10px] font-bold shadow-none border-none rounded-lg">Short</button>
-                        <button onclick="setTimerMode('longBreak')" id="btn-longBreak" class="glass-button flex-1 py-1.5 text-[10px] font-bold shadow-none border-none rounded-lg">Long</button>
+                    <div class="flex gap-1 mb-4 bg-black/5 p-1 rounded-full w-full">
+                        <button onclick="setTimerMode('pomodoro')" id="btn-pomodoro" class="glass-button active-mode flex-1 py-1.5 text-[10px] font-bold shadow-none border-none">Focus</button>
+                        <button onclick="setTimerMode('shortBreak')" id="btn-shortBreak" class="glass-button flex-1 py-1.5 text-[10px] font-bold shadow-none border-none">Short</button>
+                        <button onclick="setTimerMode('longBreak')" id="btn-longBreak" class="glass-button flex-1 py-1.5 text-[10px] font-bold shadow-none border-none">Long</button>
                     </div>
                     <div id="timer-display" class="text-6xl font-extralight tracking-tight mb-5 tabular-nums">25:00</div>
                     <div class="flex gap-3">
@@ -607,8 +610,10 @@
                     </div>
                     <div class="h-2.5 w-full bg-black/5 rounded-full overflow-hidden relative">
                         <div id="lunch-marker" class="absolute top-0 bottom-0" style="display: none;" title="Break Time"></div>
-                        <div id="work-progress-bar" class="h-full bg-[var(--accent-color)] w-0 transition-all duration-1000 ease-out rounded-full relative z-20 mix-blend-multiply dark:mix-blend-normal">
-                            <div class="absolute inset-0 bg-white/20 animate-shimmer"></div> 
+                        <!-- Blue Progress Bar with Masked Shimmer -->
+                        <div id="work-progress-bar" class="h-full bg-[var(--accent-color)] w-0 transition-all duration-1000 ease-out rounded-full relative z-20 overflow-hidden">
+                            <!-- Refined Gradient Shimmer contained within the bar -->
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent animate-shimmer" style="width: 200%; left: -50%;"></div> 
                         </div>
                     </div>
                     <div class="flex justify-between text-[10px] opacity-50 font-medium">
@@ -620,8 +625,8 @@
 
                 <div id="left-panel-input" class="glass-card p-4 transition-all duration-500 ease-in-out origin-top">
                     <form onsubmit="addTask(event)" class="relative">
-                        <input type="text" id="task-input" placeholder="Add new task..." class="w-full glass-input pl-3 pr-10 py-3 text-sm font-medium placeholder-opacity-50">
-                        <button type="submit" class="absolute right-2 top-2 w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">
+                        <input type="text" id="task-input" placeholder="Add new task..." class="w-full glass-input pl-4 pr-12 py-3 text-sm font-medium placeholder-opacity-50">
+                        <button type="submit" class="absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">
                             <span class="material-symbols-rounded">add_circle</span>
                         </button>
                     </form>
@@ -880,7 +885,7 @@
                 html: `
                     <div class="flex flex-col gap-4 text-left px-1">
                         <input id="swal-input-tag" 
-                            class="w-full px-3 py-2 border border-black/10 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-black/5 dark:bg-white/10" 
+                            class="w-full px-3 py-2 border border-black/10 dark:border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-black/5 dark:bg-white/10" 
                             placeholder="Tag Name">
                         <div>
                             <p class="text-[10px] font-bold uppercase opacity-50 mb-2">Pick Color</p>
@@ -1025,7 +1030,7 @@
                 let tagsHtml = (task.tags && task.tags.length > 0) ? `
                     <div class="flex flex-wrap gap-1 mt-2">
                         ${task.tags.map((tag, idx) => `
-                            <span onclick="removeTag('${task.id}', ${idx})" class="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">
+                            <span onclick="removeTag('${task.id}', ${idx})" class="text-[8px] opacity-90 font-bold px-2 py-0.5 rounded-full bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">
                                 ${tag.name}
                             </span>
                         `).join('')}
@@ -1036,8 +1041,8 @@
                         ${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">` : ''}
                         <p class="task-text task-text-content text-xs font-medium leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')">${task.text}</p>
                         <div class="task-action-btn flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                            <button onclick="openTagPicker('${task.id}')" class="text-[var(--text-muted)] hover:text-blue-500"><span class="material-symbols-rounded text-sm">label</span></button>
-                            <button onclick="deleteTask('${task.id}')" class="text-red-400 hover:text-red-600"><span class="material-symbols-rounded text-sm">close</span></button>
+                            <button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">label</span></button>
+                            <button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">close</span></button>
                         </div>
                     </div>
                     ${tagsHtml}`;
