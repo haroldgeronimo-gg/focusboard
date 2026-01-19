@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FocusBoard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- NoSleep.js Library -->
+    <script src="js/nosleep.min.js"></script> 
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -745,6 +747,35 @@
     <audio id="ambient-sound" src="https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg" loop preload="auto"></audio>
 
     <script>
+        // --- NOSLEEP.JS LOGIC ---
+        let noSleep = null; // Initialize as null globally
+        let noSleepEnabled = false;
+
+        // Function to enable NoSleep on first interaction
+        function enableNoSleep() {
+            if (!noSleepEnabled) {
+                try {
+                    // Lazy-initialize NoSleep to ensure library is loaded
+                    if (typeof NoSleep !== 'undefined') {
+                        if (!noSleep) noSleep = new NoSleep();
+                        noSleep.enable();
+                        noSleepEnabled = true;
+                        // Once enabled, we can remove the listeners
+                        document.removeEventListener('click', enableNoSleep);
+                        document.removeEventListener('touchstart', enableNoSleep);
+                        console.log("NoSleep active: Screen will stay on.");
+                    }
+                } catch (err) {
+                    console.error("NoSleep could not be activated", err);
+                }
+            }
+        }
+
+        // Listen for the first click or touch to activate (required by browsers)
+        document.addEventListener('click', enableNoSleep);
+        document.addEventListener('touchstart', enableNoSleep);
+        // -------------------------
+
         let tasks = [];
         let globalTags = [];
         let timer = { timeLeft: 25 * 60, originalTime: 25 * 60, isRunning: false, intervalId: null, mode: 'pomodoro', endTime: null };
