@@ -72,11 +72,10 @@
         /* Material Icons Styling */
         .material-symbols-rounded {
             font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
-            font-size: 20px; /* Smaller icons for compact look */
+            font-size: 20px;
             vertical-align: middle;
         }
 
-        /* Base Background */
         body {
             background-color: #f2f2f7;
             background-size: cover;
@@ -86,7 +85,7 @@
             color: var(--text-main);
             transition: color 0.4s ease;
             -webkit-font-smoothing: antialiased;
-            overflow: hidden; /* Prevent scrolling on body */
+            overflow: hidden;
         }
         
         .bg-overlay {
@@ -101,12 +100,10 @@
             background: rgba(0, 0, 0, 0.3);
         }
 
-        /* Scrollbar */
         *::-webkit-scrollbar { width: 4px; height: 4px; }
         *::-webkit-scrollbar-track { background: transparent; }
         *::-webkit-scrollbar-thumb { background: var(--text-muted); opacity: 0.3; border-radius: 10px; }
 
-        /* Super Glassmorphism */
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(50px) saturate(150%);
@@ -131,23 +128,22 @@
             background: var(--highlight);
         }
 
-        /* Color Tag Modifiers */
         .tag-blue { border-left: 4px solid #007aff !important; background-color: rgba(0, 122, 255, 0.15) !important; }
         .tag-red { border-left: 4px solid #ff3b30 !important; background-color: rgba(255, 59, 48, 0.15) !important; }
         .tag-green { border-left: 4px solid #34c759 !important; background-color: rgba(52, 199, 89, 0.15) !important; }
         .tag-yellow { border-left: 4px solid #ffcc00 !important; background-color: rgba(255, 204, 0, 0.15) !important; }
         .tag-purple { border-left: 4px solid #af52de !important; background-color: rgba(175, 82, 222, 0.15) !important; }
 
-        /* Interactive Elements - Set to Rounded Full */
         .glass-button {
             background: var(--button-bg);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             color: var(--text-main);
-            border-radius: 9999px; /* Rounded buttons */
+            border-radius: 9999px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid var(--glass-border);
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            cursor: pointer;
         }
         .glass-button:hover {
             background: var(--text-main);
@@ -171,7 +167,7 @@
             background: var(--button-bg);
             backdrop-filter: blur(5px);
             border: 1px solid transparent;
-            border-radius: 9999px; /* Rounded inputs */
+            border-radius: 9999px;
             color: var(--text-main);
             transition: all 0.3s ease;
         }
@@ -180,12 +176,6 @@
             border-color: var(--accent-color);
             outline: none;
             box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
-        }
-
-        /* Animations */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .column {
@@ -199,7 +189,6 @@
         }
         .column.drag-over { background: var(--highlight) !important; border-color: var(--accent-color) !important; }
 
-        /* Sweet Alert Override */
         .swal2-popup {
             background: var(--glass-bg) !important;
             backdrop-filter: blur(40px) !important;
@@ -211,14 +200,14 @@
         .swal2-confirm.swal2-styled {
             background: var(--text-main) !important;
             color: white !important;
-            border-radius: 9999px !important; /* Rounded confirm button */
+            border-radius: 9999px !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .swal2-cancel.swal2-styled {
-            border-radius: 9999px !important; /* Rounded cancel button */
+            border-radius: 9999px !important;
         }
         html.dark .swal2-confirm.swal2-styled { color: black !important; }
 
-        /* Settings Popover */
         .settings-popover {
             transform-origin: top right;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -226,16 +215,26 @@
         }
         .settings-popover.open { opacity: 1; pointer-events: auto; transform: scale(1); }
 
-        /* --- Focus Mode Styles --- */
+        /* Focus Mode Styles */
         body.focus-active #main-container {
             background: transparent !important;
             box-shadow: none !important;
-            border-color: transparent !important;
+            border: none !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
         }
 
-        /* Hide elements in focus mode */
+        /* Enforce Transparency and No Glass in Focus Mode */
+        body.focus-active .glass-card,
+        body.focus-active .glass-panel,
+        body.focus-active .column {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
         body.focus-active #main-header,
         body.focus-active #left-panel-input,
         body.focus-active #col-wrapper-todo,
@@ -245,62 +244,53 @@
             display: none !important;
         }
 
-        /* Center elements in focus mode */
         body.focus-active #content-grid {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             height: 100%;
-            gap: 2rem;
-        }
-
-        body.focus-active #left-panel-wrapper {
-            grid-column: span 12;
-            width: auto;
+            gap: 1.5rem;
             overflow: visible;
         }
 
-        /* Bigger timer, no glass */
-        body.focus-active #left-panel-timer {
-            background: transparent !important;
-            backdrop-filter: none !important;
-            border: none !important;
-            box-shadow: none !important;
-            transform: scale(1.4);
-            width: auto;
-            max-width: none;
-            padding: 0;
+        /* Reordering logic */
+        body.focus-active #left-panel-wrapper {
+            display: contents; 
         }
 
-        body.focus-active #left-panel-timer > div:first-child {
-            display: none; /* Hide mode toggles */
+        body.focus-active #left-panel-timer {
+            order: 1; 
+            width: auto;
+            max-width: none;
+            transform: scale(1.1); /* Enlarged timer */
+            margin-bottom: 0;
+            padding-top: 1rem;
         }
 
         body.focus-active #timer-display {
-            font-size: 8rem;
+            font-size: 6.5rem; /* Larger compressed font */
             font-weight: 100;
-            margin-bottom: 1rem;
+            margin-bottom: 0.25rem;
         }
 
-        /* Minimal controls in focus mode */
         body.focus-active #btn-toggle,
         body.focus-active .reset-btn-ui {
             background: transparent !important;
             border: 2px solid var(--text-main) !important;
-            backdrop-filter: none !important;
-            box-shadow: none !important;
-            display: flex !important; /* Ensure they remain visible */
             color: var(--text-main) !important;
         }
 
         body.focus-active #right-panel-kanban {
+            order: 2; /* Middle - Primary Focus */
             grid-column: span 12;
             width: 100%;
             display: flex;
             justify-content: center;
-            height: auto;
             overflow: visible;
+            flex: 1;
+            align-items: center;
+            min-height: 0;
         }
         
         body.focus-active #kanban-grid {
@@ -311,12 +301,7 @@
 
         body.focus-active #col-wrapper-ongoing {
             width: 100%;
-            max-width: 600px;
-            height: auto;
-            background: transparent !important;
-            backdrop-filter: none !important;
-            border: none !important;
-            box-shadow: none !important;
+            max-width: 800px;
         }
 
         body.focus-active div[data-status="ongoing"] {
@@ -327,53 +312,44 @@
         }
 
         body.focus-active .ongoing-task-card {
-            background: transparent !important;
-            backdrop-filter: none !important;
-            border: none !important;
-            box-shadow: none !important;
-            text-align: center;
-            padding: 0.5rem;
             width: 100%;
+            text-align: center;
         }
 
         body.focus-active .ongoing-task-card > div {
             justify-content: center !important;
+            width: auto !important;
+            margin: 0 auto;
+        }
+
+        body.focus-active .ongoing-task-card .task-text {
+            font-size: 2.25rem; /* Large centered task */
+            font-weight: 300;
+            color: var(--text-main);
+            text-align: center;
+            padding-right: 0 !important;
+            width: auto;
         }
 
         body.focus-active .ongoing-task-card .flex-wrap {
             justify-content: center !important;
         }
 
-        body.focus-active .task-text {
-            font-size: 1.5rem;
-            font-weight: 300;
-            padding-right: 0 !important;
-            color: var(--text-main);
-            text-align: center;
-            width: auto;
-        }
-
-        body.focus-active .ongoing-task-card .task-action-btn {
-            display: none !important;
-        }
-
-        /* Focus Checkbox Styles */
         .focus-mode-checkbox {
             display: none;
         }
         body.focus-active .focus-mode-checkbox {
             display: block;
             appearance: none;
-            -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border: 2px solid var(--text-main);
             border-radius: 50%;
             cursor: pointer;
             position: relative;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-right: 2.5rem;
             flex-shrink: 0;
-            margin-right: 1.5rem;
         }
         body.focus-active .focus-mode-checkbox:checked {
             background-color: var(--text-main);
@@ -382,61 +358,81 @@
             content: 'done';
             font-family: 'Material Symbols Rounded';
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             color: var(--glass-bg);
-            font-size: 16px;
+            font-size: 22px;
             font-weight: bold;
         }
 
-        /* Work Day Widget Minimal - Focus Mode */
+        /* Focus Mode Dashboard (Highly Compressed at Bottom) */
         body.focus-active #left-panel-workday {
-            position: fixed;
-            bottom: 40px;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            width: 300px;
-            background: transparent !important;
-            backdrop-filter: none !important;
-            border: none !important;
-            box-shadow: none !important;
-            z-index: 40;
-            padding: 0;
-            gap: 8px;
-            display: flex !important; /* Ensure visibility */
-            flex-direction: column !important; /* Enforce vertical stacking */
+            order: 3; /* Bottom */
+            width: 100%;
+            max-width: 300px; /* Slimmer */
+            display: flex !important;
+            flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
-            text-align: center !important; /* Enforce text centering */
+            text-align: center !important;
+            margin-bottom: 1rem; /* Less space at bottom */
+            gap: 0.25rem !important; /* Tight internal gaps */
+            padding: 0 !important; /* Zero padding */
         }
+        
         body.focus-active #left-panel-workday > div.flex {
             justify-content: center !important;
             width: 100%;
-            margin: 0 auto;
         }
+
+        body.focus-active #left-panel-workday .h-2.5 {
+            height: 3px !important; /* Ultra thin bar */
+        }
+        
         body.focus-active #left-panel-workday span.uppercase, 
         body.focus-active #work-start-display,
-        body.focus-active #work-end-display {
+        body.focus-active #work-end-display,
+        body.focus-active #clock-display,
+        body.focus-active #work-remaining {
             display: none !important;
         }
+        
         body.focus-active #left-panel-workday #work-progress-bar {
             background: var(--text-main);
             opacity: 0.8;
         }
-        body.focus-active #left-panel-workday #lunch-marker {
-            background: rgba(250, 204, 21, 0.5);
+        
+        body.focus-active .ambient-inline-controls {
+            display: flex !important;
+            border-top: none !important;
+            width: 100%;
+            justify-content: center !important;
+            margin-top: 0.25rem !important;
+            padding-top: 0 !important;
+            gap: 1.5rem;
         }
         
+        body.focus-active .ambient-inline-controls button {
+            border: 2px solid var(--text-main) !important;
+            color: var(--text-main) !important;
+            background: transparent !important;
+            width: 30px; height: 30px;
+        }
+        
+        body.focus-active #volume-val,
+        body.focus-active .ambient-inline-controls .flex-col span {
+            display: none !important; /* Hide volume labels to compress */
+        }
+
         #lunch-marker {
             position: absolute;
-            top: 0;
-            bottom: 0;
+            top: 0; bottom: 0;
             background-color: rgba(250, 204, 21, 0.6);
             z-index: 10;
             pointer-events: none;
         }
 
+        /* Exit Button Position */
         #exit-focus-btn {
             opacity: 0;
             pointer-events: none;
@@ -447,9 +443,11 @@
             opacity: 1;
             pointer-events: auto;
             transform: translateY(0);
+            top: 1.5rem;
+            right: 1.5rem;
+            left: auto;
         }
 
-        /* Custom Tag Pill styling for Swal */
         .swal-tag-pill {
             display: inline-flex;
             align-items: center;
@@ -475,21 +473,36 @@
             color: #ff3b30;
         }
 
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            background: var(--text-main);
+            opacity: 0.2;
+            border-radius: 2px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px; width: 12px;
+            border-radius: 50%;
+            background: var(--text-main);
+            cursor: pointer;
+            margin-top: -4px;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 sm:p-6">
     <div class="bg-overlay"></div>
 
-    <!-- Exit Focus Button (Fixed, Floating) -->
-    <button id="exit-focus-btn" onclick="toggleFocusMode()" class="fixed top-6 z-50 glass-button px-6 py-2 rounded-full font-bold shadow-2xl bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20">
+    <button id="exit-focus-btn" onclick="toggleFocusMode()" class="fixed z-50 glass-button px-6 py-2 rounded-full font-bold shadow-2xl bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20">
         Exit Focus
     </button>
 
-    <!-- Main Container -->
     <div id="main-container" class="w-full max-w-7xl h-[90vh] flex flex-col p-6 overflow-hidden relative transition-all duration-700 ease-in-out">
         
-        <!-- Header -->
-        <header id="main-header" class="flex justify-between items-center mb-6 shrink-0 z-10 transition-all duration-500 ease-in-out origin-top">
+        <header id="main-header" class="flex justify-between items-center mb-4 shrink-0 z-10 transition-all duration-500 ease-in-out origin-top">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md shadow-sm">
                     <span class="material-symbols-rounded text-2xl">timer</span>
@@ -497,7 +510,7 @@
                 <h1 class="text-xl font-bold tracking-tight opacity-90">FocusBoard</h1>
             </div>
             
-            <div class="flex gap-2">
+            <div class="flex gap-2 relative">
                 <button onclick="toggleFocusMode()" class="glass-button w-9 h-9 flex items-center justify-center text-indigo-500 border-indigo-200 hover:bg-indigo-500 hover:text-white" title="Enter Focus Mode">
                     <span class="material-symbols-rounded">center_focus_strong</span>
                 </button>
@@ -505,23 +518,28 @@
                 <button onclick="toggleSettings()" class="glass-button w-9 h-9 flex items-center justify-center" title="Settings">
                     <span class="material-symbols-rounded">tune</span>
                 </button>
-                <div id="settings-menu" class="settings-popover absolute top-16 right-6 w-72 glass-panel p-4 z-50 flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[70vh]">
-                    <!-- Wallpaper Settings -->
+                <div id="settings-menu" class="settings-popover absolute top-12 right-0 w-80 glass-panel p-4 z-50 flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[70vh]">
+                    <!-- Wallpaper -->
                     <div>
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Wallpaper</span>
                         <div class="grid grid-cols-4 gap-2">
-                            <button onclick="setBackground('default')" class="h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 border border-black/5 hover:scale-110 transition"></button>
-                            <button onclick="setBackground('nature')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2560&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition"></button>
-                            <button onclick="setBackground('abstract')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2560&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition"></button>
-                            <button onclick="setBackground('minimal')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=2560&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition"></button>
+                            <button onclick="setBackground('default')" class="h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 border border-black/5 hover:scale-110 transition" title="Default"></button>
+                            <button onclick="setBackground('nature')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=200&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition" title="Nature"></button>
+                            <button onclick="setBackground('abstract')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=200&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition" title="Abstract"></button>
+                            <button onclick="setBackground('minimal')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=200&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition" title="Minimal"></button>
                         </div>
-                        <label class="glass-button w-full py-2 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer mt-2">
-                            <span class="material-symbols-rounded text-base">upload_file</span> Custom
-                            <input type="file" id="bg-upload" accept="image/*" class="hidden" onchange="handleBgUpload(event)">
-                        </label>
+                        <div class="flex gap-2 mt-2">
+                            <label class="glass-button flex-1 py-2 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer">
+                                <span class="material-symbols-rounded text-base">upload_file</span> Upload
+                                <input type="file" id="bg-upload" accept="image/*" class="hidden" onchange="handleBgUpload(event)">
+                            </label>
+                            <button onclick="setRandomBackground()" class="glass-button flex-1 py-2 text-xs font-bold flex items-center justify-center gap-2">
+                                <span class="material-symbols-rounded text-base">shuffle</span> Random
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Work Shift Settings -->
+                    <!-- Work Shift -->
                     <div class="border-t border-gray-400/20 pt-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Work Shift</span>
                         <div class="flex gap-2 px-1 mb-3">
@@ -548,7 +566,7 @@
                         </div>
                     </div>
 
-                    <!-- Timer Durations -->
+                    <!-- Timer Intervals -->
                     <div class="border-t border-gray-400/20 pt-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Timer Intervals (min)</span>
                         <div class="grid grid-cols-3 gap-2 px-1">
@@ -566,6 +584,46 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Sound Options -->
+                    <div class="border-t border-gray-400/20 pt-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Sound Options</span>
+                        <div class="flex flex-col gap-3 px-1">
+                            <div class="flex items-end gap-2">
+                                <div class="flex-1">
+                                    <label class="text-[9px] opacity-60 block mb-1">Ambient Track</label>
+                                    <select id="ambient-choice" onchange="updateAmbientChoice()" class="w-full glass-input px-2 py-1.5 text-xs bg-transparent dark:bg-zinc-800 focus:outline-none">
+                                        <option value="https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg">White Noise</option>
+                                        <option value="https://actions.google.com/sounds/v1/ambiences/rain_heavy_loud.ogg">Heavy Rain</option>
+                                        <option value="https://actions.google.com/sounds/v1/ambiences/spring_day_forest.ogg">Forest</option>
+                                        <option value="https://actions.google.com/sounds/v1/ambiences/fire.ogg">Fireplace</option>
+                                        <option value="https://actions.google.com/sounds/v1/ambiences/highway_near_waterfront_distant.ogg">Ocean Waves</option>
+                                        <option value="https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg">Coffee Shop</option>
+                                        <option value="https://actions.google.com/sounds/v1/ambiences/july_night.ogg">Summer Night</option>
+                                        <option value="https://actions.google.com/sounds/v1/ambiences/warm_evening_outdoors.ogg">Warm Evening</option>
+                                    </select>
+                                </div>
+                                <button onclick="previewAmbient()" id="btn-preview-ambient" class="w-8 h-8 rounded-full glass-button flex items-center justify-center shrink-0" title="Preview Ambient">
+                                    <span id="preview-ambient-icon" class="material-symbols-rounded text-sm">play_arrow</span>
+                                </button>
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <div class="flex-1">
+                                    <label class="text-[9px] opacity-60 block mb-1">Alarm Sound</label>
+                                    <select id="alarm-choice" onchange="updateAlarmChoice()" class="w-full glass-input px-2 py-1.5 text-xs bg-transparent dark:bg-zinc-800 focus:outline-none">
+                                        <option value="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">Short Beep</option>
+                                        <option value="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg">Digital Alarm</option>
+                                        <option value="https://actions.google.com/sounds/v1/alarms/mechanical_clock_ringing.ogg">Mechanical Bell</option>
+                                        <option value="https://actions.google.com/sounds/v1/alarms/phone_ringing_8.ogg">Phone Chime</option>
+                                        <option value="https://actions.google.com/sounds/v1/alarms/bugle_call.ogg">Bugle Call</option>
+                                    </select>
+                                </div>
+                                <button onclick="previewAlarm()" class="w-8 h-8 rounded-full glass-button flex items-center justify-center shrink-0" title="Preview Alarm">
+                                    <span class="material-symbols-rounded text-sm">volume_up</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <button onclick="toggleDarkMode()" class="glass-button w-9 h-9 flex items-center justify-center" title="Theme">
@@ -574,58 +632,68 @@
                 <button onclick="generateReport()" class="glass-button w-9 h-9 flex items-center justify-center" title="Report">
                     <span class="material-symbols-rounded">description</span>
                 </button>
-                <button onclick="clearAllData()" class="glass-button w-9 h-9 flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500 hover:border-red-500 border-red-200" title="Clear">
+                <button onclick="clearAllData()" class="glass-button w-9 h-9 flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500 border-red-200" title="Clear">
                     <span class="material-symbols-rounded">delete_sweep</span>
                 </button>
             </div>
         </header>
 
-        <!-- Content Grid -->
-        <div id="content-grid" class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-6 transition-all duration-700 ease-in-out">
-            
-            <!-- Left: Controls -->
-            <div id="left-panel-wrapper" class="md:col-span-4 flex flex-col gap-4 transition-all duration-500">
-                <div id="left-panel-timer" class="glass-card p-6 flex flex-col items-center relative group transition-all duration-700 ease-in-out">
-                    <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-2xl"></div>
+        <div id="content-grid" class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4 transition-all duration-700 ease-in-out p-1 overflow-visible">
+            <div id="left-panel-wrapper" class="md:col-span-4 flex flex-col gap-4 transition-all duration-500 overflow-y-auto pr-2 pb-4">
+                
+                <div id="left-panel-timer" class="glass-card p-4 flex flex-col items-center relative">
                     <div class="flex gap-1 mb-4 bg-black/5 p-1 rounded-full w-full">
-                        <button onclick="setTimerMode('pomodoro')" id="btn-pomodoro" class="glass-button active-mode flex-1 py-1.5 text-[10px] font-bold shadow-none border-none">Focus</button>
-                        <button onclick="setTimerMode('shortBreak')" id="btn-shortBreak" class="glass-button flex-1 py-1.5 text-[10px] font-bold shadow-none border-none">Short</button>
-                        <button onclick="setTimerMode('longBreak')" id="btn-longBreak" class="glass-button flex-1 py-1.5 text-[10px] font-bold shadow-none border-none">Long</button>
+                        <button onclick="setTimerMode('pomodoro')" id="btn-pomodoro" class="glass-button active-mode flex-1 py-1 text-[10px] font-bold shadow-none border-none">Focus</button>
+                        <button onclick="setTimerMode('shortBreak')" id="btn-shortBreak" class="glass-button flex-1 py-1 text-[10px] font-bold shadow-none border-none">Short</button>
+                        <button onclick="setTimerMode('longBreak')" id="btn-longBreak" class="glass-button flex-1 py-1 text-[10px] font-bold shadow-none border-none">Long</button>
                     </div>
-                    <div id="timer-display" class="text-6xl font-extralight tracking-tight mb-5 tabular-nums">25:00</div>
+                    <div id="timer-display" class="text-5xl font-extralight tracking-tight mb-4 tabular-nums">25:00</div>
                     <div class="flex gap-3">
-                        <button onclick="toggleTimer()" id="btn-toggle" class="w-12 h-12 rounded-full bg-[var(--text-main)] text-[var(--glass-bg)] flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shadow-lg">
+                        <button onclick="toggleTimer()" id="btn-toggle" class="w-10 h-10 rounded-full bg-[var(--text-main)] text-[var(--glass-bg)] flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shadow-lg">
                             <span id="icon-play" class="material-symbols-rounded text-2xl ml-0.5">play_arrow</span>
                         </button>
-                        <button onclick="resetTimer()" class="reset-btn-ui w-10 h-10 rounded-full glass-button flex items-center justify-center opacity-60 hover:opacity-100">
+                        <button onclick="resetTimer()" class="reset-btn-ui w-8 h-8 rounded-full glass-button flex items-center justify-center opacity-60 hover:opacity-100">
                             <span class="material-symbols-rounded text-xl">restart_alt</span>
                         </button>
                     </div>
                 </div>
 
-                <div id="left-panel-workday" class="glass-card p-4 flex flex-col gap-2 transition-all duration-500 origin-top">
-                    <div class="flex justify-between items-end">
-                        <span class="text-[10px] font-bold opacity-60 uppercase tracking-wider">Day Progress</span>
-                        <span id="work-remaining" class="text-[10px] font-bold opacity-80 tabular-nums">-- left</span>
-                    </div>
-                    <div class="h-2.5 w-full bg-black/5 rounded-full overflow-hidden relative">
-                        <div id="lunch-marker" class="absolute top-0 bottom-0" style="display: none;" title="Break Time"></div>
-                        <!-- Blue Progress Bar with Masked Shimmer -->
-                        <div id="work-progress-bar" class="h-full bg-[var(--accent-color)] w-0 transition-all duration-1000 ease-out rounded-full relative z-20 overflow-hidden">
-                            <!-- Refined Gradient Shimmer contained within the bar -->
-                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent animate-shimmer" style="width: 200%; left: -50%;"></div> 
+                <div id="left-panel-workday" class="glass-card p-4 flex flex-col gap-3 transition-all duration-500 origin-top">
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-end">
+                            <span class="text-[10px] font-bold opacity-60 uppercase tracking-wider">Work Status</span>
+                            <span id="work-remaining" class="text-[10px] font-bold opacity-80 tabular-nums">-- left</span>
+                        </div>
+                        <div class="h-2.5 w-full bg-black/5 rounded-full overflow-hidden relative">
+                            <div id="lunch-marker" class="absolute top-0 bottom-0" style="display: none;" title="Break Time"></div>
+                            <div id="work-progress-bar" class="h-full bg-[var(--accent-color)] w-0 transition-all duration-1000 ease-out rounded-full relative z-20 overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent animate-shimmer" style="width: 200%; left: -50%;"></div> 
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-[10px] opacity-50 font-medium">
+                            <span id="work-start-display">09:00</span>
+                            <div id="clock-display" class="font-bold opacity-100 text-xs text-[var(--text-main)]">12:00</div>
+                            <span id="work-end-display">18:00</span>
                         </div>
                     </div>
-                    <div class="flex justify-between text-[10px] opacity-50 font-medium">
-                        <span id="work-start-display">09:00</span>
-                        <div id="clock-display" class="font-bold opacity-100 text-xs text-[var(--text-main)]">12:00</div>
-                        <span id="work-end-display">18:00</span>
+
+                    <div class="ambient-inline-controls flex items-center gap-3 pt-2 border-t border-black/5 dark:border-white/5">
+                        <button onclick="toggleAmbientSound()" id="ambient-play-btn" class="w-8 h-8 rounded-full glass-button flex items-center justify-center border-none shrink-0">
+                            <span id="ambient-icon" class="material-symbols-rounded text-lg">play_arrow</span>
+                        </button>
+                        <div class="flex flex-col flex-1 gap-1">
+                            <div class="flex justify-between items-center px-0.5">
+                                <span class="text-[9px] font-bold uppercase opacity-40">Ambient</span>
+                                <span id="volume-val" class="text-[8px] opacity-40">50%</span>
+                            </div>
+                            <input type="range" id="volume-control" min="0" max="1" step="0.01" value="0.5" oninput="setAmbientVolume(this.value)" class="w-full h-1">
+                        </div>
                     </div>
                 </div>
 
-                <div id="left-panel-input" class="glass-card p-4 transition-all duration-500 ease-in-out origin-top">
+                <div id="left-panel-input" class="glass-card p-4 transition-all duration-500 ease-in-out origin-top shrink-0">
                     <form onsubmit="addTask(event)" class="relative">
-                        <input type="text" id="task-input" placeholder="Add new task..." class="w-full glass-input pl-4 pr-12 py-3 text-sm font-medium placeholder-opacity-50">
+                        <input type="text" id="task-input" placeholder="Add task..." class="w-full glass-input pl-4 pr-12 py-3 text-sm font-medium placeholder-opacity-50 focus:outline-none">
                         <button type="submit" class="absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">
                             <span class="material-symbols-rounded">add_circle</span>
                         </button>
@@ -633,59 +701,68 @@
                 </div>
             </div>
 
-            <!-- Right: Kanban -->
             <div id="right-panel-kanban" class="md:col-span-8 h-full min-h-0 transition-all duration-500">
                 <div id="kanban-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 h-full transition-all duration-500">
-                    <div id="col-wrapper-todo" class="flex flex-col h-full column p-2 transition-all duration-500 ease-in-out" data-status="todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info">
+                    <div id="col-wrapper-todo" class="flex flex-col h-full column p-2" data-status="todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider">To Do</span>
                             <span id="count-todo" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2"></div>
+                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
                     </div>
-                    <div id="col-wrapper-ongoing" class="flex flex-col h-full column p-2 transition-all duration-700 ease-in-out border-indigo-200/30" data-status="ongoing" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info">
+                    <div id="col-wrapper-ongoing" class="flex flex-col h-full column p-2 border-indigo-200/30" data-status="ongoing" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> Focus</span>
                             <span id="count-ongoing" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2"></div>
+                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
                     </div>
-                    <div id="col-wrapper-completed" class="flex flex-col h-full column p-2 transition-all duration-500 ease-in-out" data-status="completed" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info">
+                    <div id="col-wrapper-completed" class="flex flex-col h-full column p-2" data-status="completed" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider">Done</span>
                             <span id="count-completed" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2"></div>
+                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
                     </div>
-                    <div id="col-wrapper-parked" class="flex flex-col h-full column p-2 transition-all duration-500 ease-in-out" data-status="parked" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info">
+                    <div id="col-wrapper-parked" class="flex flex-col h-full column p-2" data-status="parked" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider">Later</span>
                             <span id="count-parked" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2"></div>
+                        <div class="flex-1 overflow-y-auto pr-1 space-y-2 pb-4"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Notification Toast -->
     <div id="toast" class="glass-panel fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-32 opacity-0 transition-all duration-300 flex items-center gap-2 px-5 py-2.5 rounded-full z-50 text-sm font-medium shadow-2xl">
         <span class="material-symbols-rounded text-green-500 text-lg">check_circle</span>
         <span id="toast-msg">Notification</span>
     </div>
 
     <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+    <audio id="ambient-sound" src="https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg" loop preload="auto"></audio>
 
     <script>
-        // --- State ---
         let tasks = [];
         let globalTags = [];
-        let timer = { timeLeft: 25 * 60, originalTime: 25 * 60, isRunning: false, intervalId: null, mode: 'pomodoro' };
+        let timer = { timeLeft: 25 * 60, originalTime: 25 * 60, isRunning: false, intervalId: null, mode: 'pomodoro', endTime: null };
         let MODES = { pomodoro: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
         let wakeLock = null;
         let isFocusMode = false;
         let shiftSettings = { start: '09:00', end: '18:00', breakStart: '12:00', breakEnd: '13:00' };
+        let selectedAmbientUrl = "https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg";
+        let selectedAlarmUrl = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
+        let soundVolume = 0.5;
+
+        const randomBackgrounds = [
+            "1493246507139-91e8fad9978e", "1506744038136-46273834b3fb", "1532274402911-5a369e4c4bb5",
+            "1470770841072-f978cf4d019e", "1499346030926-9a72daac6ea6", "1433069013004-7185f53201b1",
+            "1464822759023-fed622ff2c3b", "1500462918059-b1a0cb512f1d", "1519681393797-a1e9430e3b1f",
+            "1489549132488-d00b7eee80a1", "1494438639946-1ebd1d20bf85", "1557683316-973673baf926",
+            "1614850523459-c2f4c699c52e", "1618005182384-a83a8bd57fbe"
+        ];
 
         document.addEventListener('DOMContentLoaded', () => {
             loadData(); loadSettings(); renderBoard(); updateTimerDisplay(); requestWakeLock();
@@ -697,50 +774,45 @@
             });
         });
 
-        // --- Work Day Logic ---
         function updateWorkDay() {
             const now = new Date();
             const nowTime = now.getHours() * 60 + now.getMinutes();
             const [startH, startM] = shiftSettings.start.split(':').map(Number);
             const [endH, endM] = shiftSettings.end.split(':').map(Number);
-            const [bStartH, bStartM] = shiftSettings.breakStart.split(':').map(Number);
-            const [bEndH, bEndM] = shiftSettings.breakEnd.split(':').map(Number);
             const startTime = startH * 60 + startM;
             const endTime = endH * 60 + endM;
             const totalDuration = endTime - startTime;
-            const breakStartTime = bStartH * 60 + bStartM;
-            const breakEndTime = bEndH * 60 + bEndM;
             
             const clockEl = document.getElementById('clock-display');
             if (clockEl) clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            if (totalDuration > 0) {
-                const breakStartPct = Math.max(0, ((breakStartTime - startTime) / totalDuration) * 100);
-                const breakEndPct = Math.min(100, ((breakEndTime - startTime) / totalDuration) * 100);
-                const breakWidthPct = breakEndPct - breakStartPct;
-                const marker = document.getElementById('lunch-marker');
-                if (marker) {
-                    if (breakWidthPct > 0) {
-                        marker.style.left = `${breakStartPct}%`;
-                        marker.style.width = `${breakWidthPct}%`;
-                        marker.style.display = 'block';
-                    } else marker.style.display = 'none';
-                }
-            }
-
             let percentage = 0; let text = ""; const bar = document.getElementById('work-progress-bar');
             if (bar) {
                 bar.classList.remove('bg-yellow-400', 'bg-red-500', 'bg-[var(--accent-color)]');
+                const [bStartH, bStartM] = shiftSettings.breakStart.split(':').map(Number);
+                const [bEndH, bEndM] = shiftSettings.breakEnd.split(':').map(Number);
+                const breakStartTime = bStartH * 60 + bStartM;
+                const breakEndTime = bEndH * 60 + bEndM;
+
+                if (totalDuration > 0) {
+                    const breakStartPct = Math.max(0, ((breakStartTime - startTime) / totalDuration) * 100);
+                    const breakEndPct = Math.min(100, ((breakEndTime - startTime) / totalDuration) * 100);
+                    const breakWidthPct = breakEndPct - breakStartPct;
+                    const marker = document.getElementById('lunch-marker');
+                    if (marker) {
+                        if (breakWidthPct > 0) {
+                            marker.style.left = `${breakStartPct}%`;
+                            marker.style.width = `${breakWidthPct}%`;
+                            marker.style.display = 'block';
+                        } else marker.style.display = 'none';
+                    }
+                }
 
                 if (nowTime < startTime) {
-                    percentage = 0;
-                    const diff = startTime - nowTime;
-                    text = `Starts in ${Math.floor(diff / 60)}h ${diff % 60}m`;
+                    percentage = 0; text = `Starts in ${Math.floor((startTime - nowTime) / 60)}h ${(startTime - nowTime) % 60}m`;
                     bar.classList.add('bg-[var(--accent-color)]');
                 } else if (nowTime > endTime) {
-                    percentage = 100;
-                    const diff = nowTime - endTime;
-                    text = `+ ${Math.floor(diff / 60)}h ${diff % 60}m Overtime`;
+                    percentage = 100; text = `+ ${Math.floor((nowTime - endTime) / 60)}h ${(nowTime - endTime) % 60}m Overtime`;
                     bar.classList.add('bg-red-500');
                 } else {
                     percentage = Math.min(100, Math.max(0, ((nowTime - startTime) / totalDuration) * 100));
@@ -768,10 +840,16 @@
             else if (type === 'nature') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2560')";
             else if (type === 'abstract') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2560')";
             else if (type === 'minimal') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=2560')";
-            
-            document.body.style.backgroundSize = 'cover';
-            localStorage.setItem('focusBoardBgType', type);
-            if (!isInitialLoad) toggleSettings();
+            document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center';
+            localStorage.setItem('focusBoardBgType', type); if (!isInitialLoad) toggleSettings();
+        }
+
+        function setRandomBackground() {
+            const photoId = randomBackgrounds[Math.floor(Math.random() * randomBackgrounds.length)];
+            const url = `https://images.unsplash.com/photo-${photoId}?q=80&w=2560&auto=format&fit=crop`;
+            document.body.style.backgroundImage = `url('${url}')`;
+            document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center';
+            localStorage.setItem('focusBoardBgType', 'custom'); localStorage.setItem('focusBoardBgCustom', url); 
         }
 
         function handleBgUpload(e) {
@@ -816,28 +894,71 @@
             const type = localStorage.getItem('focusBoardBgType') || 'default';
             if(type === 'custom') {
                 const bg = localStorage.getItem('focusBoardBgCustom');
-                if(bg) { document.body.style.backgroundImage = `url(${bg})`; document.body.style.backgroundSize = 'cover'; }
+                if(bg) { document.body.style.backgroundImage = bg.startsWith('data:') ? `url(${bg})` : `url('${bg}')`; document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center'; }
             } else setBackground(type, true);
 
             try {
-                const savedShift = JSON.parse(localStorage.getItem('focusBoardShift'));
-                if(savedShift) shiftSettings = savedShift;
+                const savedShift = JSON.parse(localStorage.getItem('focusBoardShift')); if(savedShift) shiftSettings = savedShift;
             } catch(e) {}
             updateShiftUI();
 
             try {
                 const savedTimer = JSON.parse(localStorage.getItem('focusBoardTimerDurations'));
                 if(savedTimer) {
-                    MODES.pomodoro = savedTimer.focus * 60;
-                    MODES.shortBreak = savedTimer.short * 60;
-                    MODES.longBreak = savedTimer.long * 60;
-                    document.getElementById('time-focus').value = savedTimer.focus;
-                    document.getElementById('time-short').value = savedTimer.short;
-                    document.getElementById('time-long').value = savedTimer.long;
+                    MODES.pomodoro = savedTimer.focus * 60; MODES.shortBreak = savedTimer.short * 60; MODES.longBreak = savedTimer.long * 60;
+                    document.getElementById('time-focus').value = savedTimer.focus; document.getElementById('time-short').value = savedTimer.short; document.getElementById('time-long').value = savedTimer.long;
                 }
                 if(!timer.isRunning) { timer.originalTime = MODES[timer.mode]; timer.timeLeft = MODES[timer.mode]; updateTimerDisplay(); }
             } catch(e) {}
+
+            try {
+                const savedSounds = JSON.parse(localStorage.getItem('focusBoardSounds'));
+                if(savedSounds) {
+                    selectedAmbientUrl = savedSounds.ambient || "https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg";
+                    selectedAlarmUrl = savedSounds.alarm || "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
+                    soundVolume = savedSounds.volume !== undefined ? savedSounds.volume : 0.5;
+                    document.getElementById('ambient-choice').value = selectedAmbientUrl; document.getElementById('alarm-choice').value = selectedAlarmUrl;
+                    document.getElementById('volume-control').value = soundVolume; document.getElementById('volume-val').innerText = `${Math.round(soundVolume * 100)}%`;
+                }
+                const ambient = document.getElementById('ambient-sound'); if (ambient) { ambient.src = selectedAmbientUrl; ambient.volume = soundVolume; }
+                const alarm = document.getElementById('alarm-sound'); if (alarm) { alarm.src = selectedAlarmUrl; }
+            } catch(e) {}
         }
+
+        function setAmbientVolume(val) {
+            soundVolume = parseFloat(val); const audio = document.getElementById('ambient-sound');
+            if (audio) audio.volume = soundVolume;
+            const vv = document.getElementById('volume-val'); if(vv) vv.innerText = `${Math.round(soundVolume * 100)}%`;
+            saveSoundSettings();
+        }
+
+        async function toggleAmbientSound() {
+            const audio = document.getElementById('ambient-sound'); const icon = document.getElementById('ambient-icon');
+            if (!audio.src || audio.src === window.location.href || audio.src.includes('undefined')) { audio.src = selectedAmbientUrl; audio.load(); }
+            try {
+                if (audio.paused) { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); }
+                else { audio.pause(); icon.innerText = "play_arrow"; document.getElementById('ambient-play-btn').classList.remove('active-mode'); }
+            } catch (err) { audio.load(); showToast("Sound error. Retrying..."); }
+        }
+
+        async function previewAmbient() {
+            const audio = document.getElementById('ambient-sound'); const icon = document.getElementById('preview-ambient-icon');
+            const selected = document.getElementById('ambient-choice').value;
+            if (!audio.paused && audio.src === selected) { audio.pause(); icon.innerText = "play_arrow"; }
+            else { audio.src = selected; audio.load(); try { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-icon').innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); } catch(e) {} }
+        }
+
+        function previewAlarm() { const alarm = document.getElementById('alarm-sound'); const selected = document.getElementById('alarm-choice').value; alarm.src = selected; alarm.load(); alarm.play().catch(e => console.error(e)); }
+
+        function updateAmbientChoice() {
+            selectedAmbientUrl = document.getElementById('ambient-choice').value; const audio = document.getElementById('ambient-sound');
+            if (audio) { const wasPlaying = !audio.paused; audio.src = selectedAmbientUrl; audio.load(); if (wasPlaying) audio.play(); }
+            saveSoundSettings();
+        }
+
+        function updateAlarmChoice() { selectedAlarmUrl = document.getElementById('alarm-choice').value; const alarm = document.getElementById('alarm-sound'); if (alarm) { alarm.src = selectedAlarmUrl; alarm.load(); } saveSoundSettings(); }
+
+        function saveSoundSettings() { localStorage.setItem('focusBoardSounds', JSON.stringify({ ambient: selectedAmbientUrl, alarm: selectedAlarmUrl, volume: soundVolume })); }
 
         function setTimerMode(m) { 
             stopTimer(); timer.mode = m; timer.timeLeft = MODES[m]; timer.originalTime = MODES[m]; 
@@ -847,138 +968,59 @@
         }
         function toggleTimer() { timer.isRunning ? stopTimer() : startTimer(); }
         function startTimer() { 
-            if(timer.isRunning) return; timer.isRunning = true; 
-            const playIcon = document.getElementById('icon-play'); if (playIcon) playIcon.innerText = 'pause'; 
-            timer.intervalId = setInterval(() => { if(timer.timeLeft > 0) { timer.timeLeft--; updateTimerDisplay(); } else completeTimer(); }, 1000); 
-            requestWakeLock(); 
+            if(timer.isRunning) return; timer.isRunning = true; timer.endTime = Date.now() + timer.timeLeft * 1000;
+            const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'pause'; 
+            timer.intervalId = setInterval(() => {
+                const diff = Math.ceil((timer.endTime - Date.now()) / 1000);
+                if(diff >= 0) { timer.timeLeft = diff; updateTimerDisplay(); } else { completeTimer(); }
+            }, 1000); requestWakeLock(); 
         }
-        function stopTimer() { timer.isRunning = false; clearInterval(timer.intervalId); const playIcon = document.getElementById('icon-play'); if (playIcon) playIcon.innerText = 'play_arrow'; document.title = "FocusBoard"; }
+        function stopTimer() { timer.isRunning = false; clearInterval(timer.intervalId); const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'play_arrow'; document.title = "FocusBoard"; }
         function resetTimer() { stopTimer(); timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
         function updateTimerDisplay() {
-            const m = Math.floor(timer.timeLeft / 60).toString().padStart(2,'0');
-            const s = (timer.timeLeft % 60).toString().padStart(2,'0');
-            const display = document.getElementById('timer-display'); if (display) display.innerText = `${m}:${s}`;
+            const m = Math.floor(timer.timeLeft / 60).toString().padStart(2,'0'); const s = (timer.timeLeft % 60).toString().padStart(2,'0');
+            const d = document.getElementById('timer-display'); if (d) d.innerText = `${m}:${s}`;
             if(timer.isRunning) document.title = `(${m}:${s}) FocusBoard`;
         }
-        function completeTimer() { stopTimer(); document.getElementById('alarm-sound').play().catch(()=>{}); showToast("Timer Finished!"); timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
+        function completeTimer() { stopTimer(); const a = document.getElementById('alarm-sound'); if(a) a.play().catch(()=>{}); showToast("Timer Finished!"); timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
 
         function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('focusBoardTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }
         function loadTheme() { if(localStorage.getItem('focusBoardTheme') === 'dark') document.documentElement.classList.add('dark'); }
         async function requestWakeLock() { if('wakeLock' in navigator) try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){} }
 
+        // --- Kanban & Tasks ---
         function getLibraryHtml() {
             if (globalTags.length === 0) return '<p class="text-[10px] opacity-40 italic">No saved tags</p>';
-            return globalTags.map(tag => `
-                <div class="swal-tag-pill bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30" data-name="${tag.name}" data-color="${tag.color}">
-                    <span>${tag.name}</span>
-                    <span class="swal-tag-delete material-symbols-rounded text-[10px]" data-delete="${tag.name}">close</span>
-                </div>
-            `).join('');
+            return globalTags.map(tag => `<div class="swal-tag-pill bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30" data-name="${tag.name}" data-color="${tag.color}"><span>${tag.name}</span><span class="swal-tag-delete material-symbols-rounded text-[10px]" data-delete="${tag.name}">close</span></div>`).join('');
         }
 
         async function openTagPicker(taskId) {
-            const task = tasks.find(t => t.id === taskId);
-            if (!task) return;
-
+            const task = tasks.find(t => t.id === taskId); if (!task) return;
             const { value: formValues } = await Swal.fire({
                 title: 'Project Tag',
-                html: `
-                    <div class="flex flex-col gap-4 text-left px-1">
-                        <input id="swal-input-tag" 
-                            class="w-full px-3 py-2 border border-black/10 dark:border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-black/5 dark:bg-white/10" 
-                            placeholder="Tag Name">
-                        <div>
-                            <p class="text-[10px] font-bold uppercase opacity-50 mb-2">Pick Color</p>
-                            <div class="flex justify-around">
-                                <button type="button" class="swal-color-btn bg-blue-500 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="blue"></button>
-                                <button type="button" class="swal-color-btn bg-red-500 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="red"></button>
-                                <button type="button" class="swal-color-btn bg-green-500 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="green"></button>
-                                <button type="button" class="swal-color-btn bg-yellow-400 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="yellow"></button>
-                                <button type="button" class="swal-color-btn bg-purple-500 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="purple"></button>
-                            </div>
-                        </div>
-                        <div class="border-t border-gray-400/20 pt-3">
-                            <p class="text-[10px] font-bold uppercase opacity-50 mb-2">Saved Tags</p>
-                            <div id="swal-tag-library" class="flex flex-wrap max-h-32 overflow-y-auto">
-                                ${getLibraryHtml()}
-                            </div>
-                        </div>
-                    </div>`,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'Add Tag',
+                html: `<div class="flex flex-col gap-4 text-left px-1"><input id="swal-input-tag" class="w-full px-3 py-2 border border-black/10 dark:border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-black/5 dark:bg-white/10" placeholder="Tag Name"><div><p class="text-[10px] font-bold uppercase opacity-50 mb-2">Pick Color</p><div class="flex justify-around"><button type="button" class="swal-color-btn bg-blue-500 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="blue"></button><button type="button" class="swal-color-btn bg-red-500 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="red"></button><button type="button" class="swal-color-btn bg-green-500 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="green"></button><button type="button" class="swal-color-btn bg-yellow-400 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="yellow"></button><button type="button" class="swal-color-btn bg-purple-500 w-8 h-8 rounded-full border-2 border-white shadow transition-transform" data-color="purple"></button></div></div><div class="border-t border-gray-400/20 pt-3"><p class="text-[10px] font-bold uppercase opacity-50 mb-2">Saved Tags</p><div id="swal-tag-library" class="flex flex-wrap max-h-32 overflow-y-auto">${getLibraryHtml()}</div></div></div>`,
+                focusConfirm: false, showCancelButton: true, confirmButtonText: 'Add Tag',
                 didOpen: () => {
-                    const btns = Swal.getPopup().querySelectorAll('.swal-color-btn');
-                    let selectedColor = 'blue';
-
-                    const selectColor = (c) => {
-                        btns.forEach(b => b.style.transform = 'scale(1)');
-                        const btn = Array.from(btns).find(b => b.getAttribute('data-color') === c);
-                        if(btn) btn.style.transform = 'scale(1.25)';
-                        selectedColor = c;
-                    };
-                    
+                    const btns = Swal.getPopup().querySelectorAll('.swal-color-btn'); let selectedColor = 'blue';
+                    const selectColor = (c) => { btns.forEach(b => b.style.transform = 'scale(1)'); const btn = Array.from(btns).find(b => b.getAttribute('data-color') === c); if(btn) btn.style.transform = 'scale(1.25)'; selectedColor = c; };
                     btns.forEach(btn => btn.onclick = () => selectColor(btn.getAttribute('data-color')));
-
-                    document.getElementById('swal-tag-library').onclick = (e) => {
-                        const delBtn = e.target.closest('[data-delete]');
-                        if (delBtn) {
-                            e.stopPropagation();
-                            const tagName = delBtn.getAttribute('data-delete');
-                            globalTags = globalTags.filter(t => t.name !== tagName);
-                            localStorage.setItem('focusBoardGlobalTags', JSON.stringify(globalTags));
-                            document.getElementById('swal-tag-library').innerHTML = getLibraryHtml();
-                            return;
-                        }
-                        const pill = e.target.closest('.swal-tag-pill');
-                        if (pill) {
-                            const name = pill.getAttribute('data-name');
-                            const color = pill.getAttribute('data-color');
-                            if (!task.tags) task.tags = [];
-                            task.tags.push({ name, color });
-                            saveData(); renderBoard(); showToast('Tag Added');
-                            Swal.close();
-                        }
-                    };
-
+                    const lib = document.getElementById('swal-tag-library'); if (lib) { lib.onclick = (e) => { const delBtn = e.target.closest('[data-delete]'); if (delBtn) { e.stopPropagation(); const tagName = delBtn.getAttribute('data-delete'); globalTags = globalTags.filter(t => t.name !== tagName); localStorage.setItem('focusBoardGlobalTags', JSON.stringify(globalTags)); lib.innerHTML = getLibraryHtml(); return; } const pill = e.target.closest('.swal-tag-pill'); if (pill) { const name = pill.getAttribute('data-name'); const color = pill.getAttribute('data-color'); if (!task.tags) task.tags = []; task.tags.push({ name: name, color: color }); saveData(); renderBoard(); showToast('Tag Added'); Swal.close(); } }; }
                     Swal.getPopup().selectedColor = () => selectedColor;
                 },
-                preConfirm: () => {
-                    const tag = document.getElementById('swal-input-tag').value.trim();
-                    if (!tag) { Swal.showValidationMessage('Enter a tag name'); return false; }
-                    return { tagName: tag, color: Swal.getPopup().selectedColor() };
-                }
+                preConfirm: () => { const t = document.getElementById('swal-input-tag').value.trim(); if (!t) { Swal.showValidationMessage('Tag name required'); return false; } return { tagName: t, color: Swal.getPopup().selectedColor() }; }
             });
-
             if (formValues) {
-                if (!task.tags) task.tags = [];
-                task.tags.push({ name: formValues.tagName, color: formValues.color });
-                const existing = globalTags.find(t => t.name.toLowerCase() === formValues.tagName.toLowerCase());
-                if (!existing) { globalTags.push({ name: formValues.tagName, color: formValues.color }); localStorage.setItem('focusBoardGlobalTags', JSON.stringify(globalTags)); }
+                if (!task.tags) task.tags = []; task.tags.push({ name: formValues.tagName, color: formValues.color });
+                if (!globalTags.find(t => t.name.toLowerCase() === formValues.tagName.toLowerCase())) { globalTags.push({ name: formValues.tagName, color: formValues.color }); localStorage.setItem('focusBoardGlobalTags', JSON.stringify(globalTags)); }
                 saveData(); renderBoard(); showToast('Tag Added');
             }
         }
 
-        function addTask(e) {
-            e.preventDefault();
-            const input = document.getElementById('task-input');
-            const text = input.value.trim();
-            if (text) { tasks.push({ id: Date.now().toString(), text, status: 'todo', tags: [] }); saveData(); renderBoard(); input.value = ''; showToast('Task Added'); }
-        }
-        function deleteTask(id) {
-            Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', width: 300 }).then((res) => {
-                if(res.isConfirmed) { tasks = tasks.filter(t => t.id !== id); saveData(); renderBoard(); }
-            });
-        }
-        function removeTag(taskId, tagIndex) {
-            const task = tasks.find(t => t.id === taskId);
-            if (task && task.tags) { task.tags.splice(tagIndex, 1); saveData(); renderBoard(); }
-        }
+        function addTask(e) { e.preventDefault(); const i = document.getElementById('task-input'); const t = i.value.trim(); if (t) { tasks.push({ id: Date.now().toString(), text: t, status: 'todo', tags: [] }); saveData(); renderBoard(); i.value = ''; showToast('Task Added'); } }
+        function deleteTask(id) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', width: 300 }).then((res) => { if(res.isConfirmed) { tasks = tasks.filter(t => t.id !== id); saveData(); renderBoard(); } }); }
+        function removeTag(taskId, idx) { const t = tasks.find(x => x.id === taskId); if (t && t.tags) { t.tags.splice(idx, 1); saveData(); renderBoard(); } }
         function enableEdit(id) {
-            const p = document.getElementById(id).querySelector('p.task-text-content');
-            const input = document.createElement('input');
-            input.value = p.innerText;
-            input.className = 'w-full bg-transparent border-b border-[var(--text-main)] outline-none text-sm';
+            const p = document.getElementById(id).querySelector('p.task-text-content'); const input = document.createElement('input'); input.value = p.innerText; input.className = 'w-full bg-transparent border-b border-[var(--text-main)] outline-none text-sm';
             input.onblur = () => { if(input.value.trim()) { tasks.find(t=>t.id===id).text = input.value.trim(); saveData(); renderBoard(); } else renderBoard(); };
             input.onkeydown = (e) => { if(e.key === 'Enter') input.blur(); };
             p.replaceWith(input); input.focus();
@@ -986,67 +1028,24 @@
         function dragStart(e) { draggedItem = this; setTimeout(() => this.classList.add('opacity-50'), 0); }
         function dragEnd() { this.classList.remove('opacity-50'); draggedItem = null; }
         function allowDrop(e) { e.preventDefault(); }
-        function dragEnter(e) { e.preventDefault(); const col = e.target.closest('.column'); if(col) col.classList.add('drag-over'); }
-        function dragLeave(e) { const col = e.target.closest('.column'); if(col) col.classList.remove('drag-over'); }
-        function drop(e) {
-            e.preventDefault();
-            const col = e.target.closest('[data-status]');
-            if(col) col.classList.remove('drag-over');
-            if(col && draggedItem) {
-                tasks.find(t => t.id === draggedItem.id).status = col.getAttribute('data-status');
-                saveData(); renderBoard();
-            }
-        }
+        function dragEnter(e) { e.preventDefault(); const c = e.target.closest('.column'); if(c) c.classList.add('drag-over'); }
+        function dragLeave(e) { const c = e.target.closest('.column'); if(c) c.classList.remove('drag-over'); }
+        function drop(e) { e.preventDefault(); const c = e.target.closest('[data-status]'); if(c) c.classList.remove('drag-over'); if(c && draggedItem) { tasks.find(t => t.id === draggedItem.id).status = c.getAttribute('data-status'); saveData(); renderBoard(); } }
 
-        function toggleFocusMode() {
-            isFocusMode = !isFocusMode;
-            document.body.classList.toggle('focus-active');
-            showToast(isFocusMode ? 'Focus Mode Active' : 'Focus Mode Exited');
-            renderBoard();
-        }
-
-        function completeTaskFromFocus(id) {
-            const task = tasks.find(t => t.id === id);
-            if (task) { task.status = 'completed'; saveData(); showToast('Task Completed!'); renderBoard(); }
-        }
+        function toggleFocusMode() { isFocusMode = !isFocusMode; document.body.classList.toggle('focus-active'); showToast(isFocusMode ? 'Focus Active' : 'Focus Exited'); renderBoard(); }
+        function completeTaskFromFocus(id) { const t = tasks.find(x => x.id === id); if (t) { t.status = 'completed'; saveData(); showToast('Done!'); renderBoard(); } }
 
         function renderBoard() {
-            const cols = { 
-                todo: document.querySelector('#col-wrapper-todo .flex-1'), 
-                ongoing: document.querySelector('#col-wrapper-ongoing .flex-1'), 
-                completed: document.querySelector('#col-wrapper-completed .flex-1'), 
-                parked: document.querySelector('#col-wrapper-parked .flex-1') 
-            };
+            const cols = { todo: document.querySelector('#col-wrapper-todo .flex-1'), ongoing: document.querySelector('#col-wrapper-ongoing .flex-1'), completed: document.querySelector('#col-wrapper-completed .flex-1'), parked: document.querySelector('#col-wrapper-parked .flex-1') };
             Object.values(cols).forEach(c => { if(c) c.innerHTML = ''; });
             const counts = { todo: 0, ongoing: 0, completed: 0, parked: 0 };
-            
             tasks.forEach(task => {
-                const el = document.createElement('div');
-                const isOngoing = task.status === 'ongoing';
-                let colorClass = (task.tags && task.tags.length > 0) ? `tag-${task.tags[0].color}` : "";
-                el.className = `glass-card p-3 mb-2 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''} ${colorClass}`;
+                const el = document.createElement('div'); const isOngoing = task.status === 'ongoing';
+                let cc = (task.tags && task.tags.length > 0) ? `tag-${task.tags[0].color}` : "";
+                el.className = `glass-card p-3 mb-2 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''} ${cc}`;
                 el.draggable = true; el.id = task.id;
-                
-                let tagsHtml = (task.tags && task.tags.length > 0) ? `
-                    <div class="flex flex-wrap gap-1 mt-2">
-                        ${task.tags.map((tag, idx) => `
-                            <span onclick="removeTag('${task.id}', ${idx})" class="text-[8px] opacity-90 font-bold px-2 py-0.5 rounded-full bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">
-                                ${tag.name}
-                            </span>
-                        `).join('')}
-                    </div>` : "";
-
-                el.innerHTML = `
-                    <div class="flex items-center justify-between w-full">
-                        ${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">` : ''}
-                        <p class="task-text task-text-content text-xs font-medium leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')">${task.text}</p>
-                        <div class="task-action-btn flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                            <button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">label</span></button>
-                            <button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">close</span></button>
-                        </div>
-                    </div>
-                    ${tagsHtml}`;
-                
+                let th = (task.tags && task.tags.length > 0) ? `<div class="flex flex-wrap gap-1 mt-2">${task.tags.map((tg, i) => `<span onclick="removeTag('${task.id}', ${i})" class="text-[8px] opacity-90 font-bold px-2 py-0.5 rounded-full bg-${tg.color}-500/20 text-${tg.color}-500 border border-${tg.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">${tg.name}</span>`).join('')}</div>` : "";
+                el.innerHTML = `<div class="flex items-center justify-between w-full">${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">` : ''}<p class="task-text task-text-content text-xs font-medium leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')">${task.text}</p><div class="task-action-btn flex gap-1 opacity-40 hover:opacity-100 transition-opacity shrink-0"><button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">label</span></button><button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">close</span></button></div></div>${th}`;
                 el.addEventListener('dragstart', dragStart); el.addEventListener('dragend', dragEnd);
                 if(cols[task.status]) { cols[task.status].appendChild(el); counts[task.status]++; }
             });
@@ -1055,13 +1054,10 @@
 
         function generateReport() {
             const d = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            const formatTask = (t) => `- ${t.text}${ (t.tags && t.tags.length > 0) ? ` (${t.tags.map(tg => tg.name).join(', ')})` : '' }`;
-            const completed = tasks.filter(t => t.status === 'completed');
-            const todo = tasks.filter(t => t.status === 'todo' || t.status === 'ongoing');
-            const parked = tasks.filter(t => t.status === 'parked');
-            let txt = `${d}\n\nCompleted:\n${completed.map(formatTask).join('\n') || '- None'}\n\nTo do:\n${todo.map(formatTask).join('\n') || '- None'}\n\nParked:\n${parked.map(formatTask).join('\n') || '- None'}`;
-            const el = document.createElement('textarea'); el.value = txt; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-            showToast('Report Copied');
+            const fmt = (t) => `- ${t.text}${ (t.tags && t.tags.length > 0) ? ` (${t.tags.map(tg => tg.name).join(', ')})` : '' }`;
+            const comp = tasks.filter(x => x.status === 'completed'); const todo = tasks.filter(x => x.status === 'todo' || x.status === 'ongoing'); const pk = tasks.filter(x => x.status === 'parked');
+            let txt = `${d}\n\nCompleted:\n${comp.map(fmt).join('\n') || '- None'}\n\nTo do:\n${todo.map(fmt).join('\n') || '- None'}\n\nParked:\n${pk.map(fmt).join('\n') || '- None'}`;
+            const el = document.createElement('textarea'); el.value = txt; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast('Report Copied');
         }
 
         function saveData() { localStorage.setItem('pomodoroKanbanTasks', JSON.stringify(tasks)); }
@@ -1070,12 +1066,7 @@
             try { globalTags = JSON.parse(localStorage.getItem('focusBoardGlobalTags')) || []; } catch(e) { globalTags = []; }
         }
         function clearAllData() { Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed) { tasks=[]; saveData(); renderBoard(); showToast('Cleared'); }}); }
-        function showToast(msg) {
-            const t = document.getElementById('toast'); document.getElementById('toast-msg').innerText = msg;
-            if (t) {
-                t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500);
-            }
-        }
+        function showToast(msg) { const t = document.getElementById('toast'); if (t) { document.getElementById('toast-msg').innerText = msg; t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500); } }
     </script>
 </body>
 </html>
