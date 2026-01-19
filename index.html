@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FocusBoard - Compact Glass</title>
+    <title>FocusBoard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -130,6 +130,13 @@
             box-shadow: 0 10px 15px rgba(0,0,0,0.05);
             background: var(--highlight);
         }
+
+        /* Color Tag Modifiers */
+        .tag-blue { border-left: 4px solid #007aff !important; background-color: rgba(0, 122, 255, 0.15) !important; }
+        .tag-red { border-left: 4px solid #ff3b30 !important; background-color: rgba(255, 59, 48, 0.15) !important; }
+        .tag-green { border-left: 4px solid #34c759 !important; background-color: rgba(52, 199, 89, 0.15) !important; }
+        .tag-yellow { border-left: 4px solid #ffcc00 !important; background-color: rgba(255, 204, 0, 0.15) !important; }
+        .tag-purple { border-left: 4px solid #af52de !important; background-color: rgba(175, 82, 222, 0.15) !important; }
 
         /* Interactive Elements */
         .glass-button {
@@ -327,6 +334,16 @@
             width: 100%;
         }
 
+        /* Force inner flex container to center its children in focus mode */
+        body.focus-active .ongoing-task-card > div {
+            justify-content: center !important;
+        }
+
+        /* Center tags in focus mode */
+        body.focus-active .ongoing-task-card .flex-wrap {
+            justify-content: center !important;
+        }
+
         body.focus-active .task-text {
             font-size: 1.5rem;
             font-weight: 300;
@@ -467,7 +484,7 @@
                 <button onclick="toggleSettings()" class="glass-button w-9 h-9 flex items-center justify-center" title="Settings">
                     <span class="material-symbols-rounded">tune</span>
                 </button>
-                <div id="settings-menu" class="settings-popover absolute top-16 right-6 w-64 glass-panel p-4 z-50 flex flex-col gap-4 shadow-2xl">
+                <div id="settings-menu" class="settings-popover absolute top-16 right-6 w-72 glass-panel p-4 z-50 flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[70vh]">
                     <!-- Wallpaper Settings -->
                     <div>
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Wallpaper</span>
@@ -486,7 +503,7 @@
                     <!-- Work Shift Settings -->
                     <div class="border-t border-gray-400/20 pt-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Work Shift</span>
-                        <div class="flex gap-2 px-1 mb-2">
+                        <div class="flex gap-2 px-1 mb-3">
                             <div class="flex-1">
                                 <label class="text-[9px] opacity-60 block mb-1">Start</label>
                                 <input type="time" id="shift-start" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
@@ -497,7 +514,6 @@
                             </div>
                         </div>
                         
-                        <!-- Break Time Settings -->
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Break Time</span>
                         <div class="flex gap-2 px-1">
                             <div class="flex-1">
@@ -507,6 +523,25 @@
                             <div class="flex-1">
                                 <label class="text-[9px] opacity-60 block mb-1">End</label>
                                 <input type="time" id="break-end" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timer Durations -->
+                    <div class="border-t border-gray-400/20 pt-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Timer Intervals (min)</span>
+                        <div class="grid grid-cols-3 gap-2 px-1">
+                            <div>
+                                <label class="text-[9px] opacity-60 block mb-1">Focus</label>
+                                <input type="number" id="time-focus" min="1" onchange="saveTimerSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="text-[9px] opacity-60 block mb-1">Short</label>
+                                <input type="number" id="time-short" min="1" onchange="saveTimerSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="text-[9px] opacity-60 block mb-1">Long</label>
+                                <input type="number" id="time-long" min="1" onchange="saveTimerSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
                             </div>
                         </div>
                     </div>
@@ -583,7 +618,7 @@
                 </div>
             </div>
 
-            <!-- Right: Kanban Columns -->
+            <!-- Right: Kanban Board -->
             <div id="right-panel-kanban" class="md:col-span-8 h-full min-h-0 transition-all duration-500">
                 <div id="kanban-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 h-full transition-all duration-500">
                     
@@ -643,7 +678,7 @@
         // --- State ---
         let tasks = [];
         let timer = { timeLeft: 25 * 60, originalTime: 25 * 60, isRunning: false, intervalId: null, mode: 'pomodoro' };
-        const MODES = { pomodoro: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
+        let MODES = { pomodoro: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
         let wakeLock = null;
         let isFocusMode = false;
         let shiftSettings = { start: '09:00', end: '18:00', breakStart: '12:00', breakEnd: '13:00' };
@@ -654,7 +689,7 @@
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('settings-menu');
                 const btn = e.target.closest('button');
-                if (!menu.contains(e.target) && (!btn || !btn.title.includes('Settings'))) menu.classList.remove('open');
+                if (menu && !menu.contains(e.target) && (!btn || !btn.title.includes('Settings'))) menu.classList.remove('open');
             });
         });
 
@@ -760,6 +795,27 @@
             }
         }
 
+        function saveTimerSettings() {
+            const focus = parseInt(document.getElementById('time-focus').value) || 25;
+            const short = parseInt(document.getElementById('time-short').value) || 5;
+            const long = parseInt(document.getElementById('time-long').value) || 15;
+
+            const newSettings = { focus, short, long };
+            localStorage.setItem('focusBoardTimerDurations', JSON.stringify(newSettings));
+            
+            // Update active MODES
+            MODES.pomodoro = focus * 60;
+            MODES.shortBreak = short * 60;
+            MODES.longBreak = long * 60;
+
+            // Refresh current mode if timer not running
+            if (!timer.isRunning) {
+                timer.originalTime = MODES[timer.mode];
+                timer.timeLeft = MODES[timer.mode];
+                updateTimerDisplay();
+            }
+        }
+
         function updateShiftUI() {
             document.getElementById('shift-start').value = shiftSettings.start;
             document.getElementById('shift-end').value = shiftSettings.end;
@@ -790,6 +846,60 @@
                 saveData();
                 showToast('Task Completed!');
                 // Re-render board immediately
+                renderBoard();
+            }
+        }
+
+        // --- Tag Logic ---
+        async function openTagPicker(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const { value: formValues } = await Swal.fire({
+                title: 'Add Project Tag',
+                html:
+                    '<input id="swal-input-tag" class="swal2-input" placeholder="Project Name" style="border-radius: 12px;">' +
+                    '<div class="flex justify-around mt-4">' +
+                    '<button type="button" class="swal-color-btn bg-blue-500 w-8 h-8 rounded-full border-2 border-white shadow" data-color="blue"></button>' +
+                    '<button type="button" class="swal-color-btn bg-red-500 w-8 h-8 rounded-full border-2 border-white shadow" data-color="red"></button>' +
+                    '<button type="button" class="swal-color-btn bg-green-500 w-8 h-8 rounded-full border-2 border-white shadow" data-color="green"></button>' +
+                    '<button type="button" class="swal-color-btn bg-yellow-400 w-8 h-8 rounded-full border-2 border-white shadow" data-color="yellow"></button>' +
+                    '<button type="button" class="swal-color-btn bg-purple-500 w-8 h-8 rounded-full border-2 border-white shadow" data-color="purple"></button>' +
+                    '</div>',
+                focusConfirm: false,
+                didOpen: () => {
+                    const btns = Swal.getPopup().querySelectorAll('.swal-color-btn');
+                    let selectedColor = 'blue';
+                    btns.forEach(btn => {
+                        btn.onclick = () => {
+                            btns.forEach(b => b.style.transform = 'scale(1)');
+                            btn.style.transform = 'scale(1.2)';
+                            selectedColor = btn.getAttribute('data-color');
+                        };
+                    });
+                    Swal.getPopup().selectedColor = () => selectedColor;
+                },
+                preConfirm: () => {
+                    const tag = document.getElementById('swal-input-tag').value;
+                    if (!tag) { Swal.showValidationMessage('Please enter a tag name'); return false; }
+                    return { tagName: tag, color: Swal.getPopup().selectedColor() };
+                }
+            });
+
+            if (formValues) {
+                if (!task.tags) task.tags = [];
+                task.tags.push({ name: formValues.tagName, color: formValues.color });
+                saveData();
+                renderBoard();
+                showToast('Tag Added');
+            }
+        }
+
+        function removeTag(taskId, tagIndex) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task && task.tags) {
+                task.tags.splice(tagIndex, 1);
+                saveData();
                 renderBoard();
             }
         }
@@ -838,6 +948,29 @@
                 if(savedShift) shiftSettings = savedShift;
             } catch(e) {}
             updateShiftUI();
+
+            // Load Timer Settings
+            try {
+                const savedTimer = JSON.parse(localStorage.getItem('focusBoardTimerDurations'));
+                if(savedTimer) {
+                    document.getElementById('time-focus').value = savedTimer.focus;
+                    document.getElementById('time-short').value = savedTimer.short;
+                    document.getElementById('time-long').value = savedTimer.long;
+                    MODES.pomodoro = savedTimer.focus * 60;
+                    MODES.shortBreak = savedTimer.short * 60;
+                    MODES.longBreak = savedTimer.long * 60;
+                } else {
+                    document.getElementById('time-focus').value = 25;
+                    document.getElementById('time-short').value = 5;
+                    document.getElementById('time-long').value = 15;
+                }
+                // Refresh current timer display if not running
+                if(!timer.isRunning) {
+                    timer.originalTime = MODES[timer.mode];
+                    timer.timeLeft = MODES[timer.mode];
+                    updateTimerDisplay();
+                }
+            } catch(e) {}
         }
 
         // --- Wake Lock ---
@@ -867,7 +1000,7 @@
             const input = document.getElementById('task-input');
             const text = input.value.trim();
             if (text) {
-                tasks.push({ id: Date.now().toString(), text, status: 'todo' });
+                tasks.push({ id: Date.now().toString(), text, status: 'todo', tags: [] });
                 saveData(); renderBoard(); input.value = ''; showToast('Task Added');
             }
         }
@@ -877,7 +1010,7 @@
             });
         }
         function enableEdit(id) {
-            const p = document.getElementById(id).querySelector('p');
+            const p = document.getElementById(id).querySelector('p.task-text-content');
             const input = document.createElement('input');
             input.value = p.innerText;
             input.className = 'w-full bg-transparent border-b border-[var(--text-main)] outline-none text-sm';
@@ -911,20 +1044,40 @@
             tasks.forEach(task => {
                 const el = document.createElement('div');
                 const isOngoing = task.status === 'ongoing';
-                // Added ongoing-task-card class to target specifically in focus mode CSS
-                el.className = `glass-card p-3 mb-2 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''}`;
+                
+                // Determine Tag Hue
+                let colorClass = "";
+                if (task.tags && task.tags.length > 0) {
+                    colorClass = `tag-${task.tags[0].color}`;
+                }
+
+                el.className = `glass-card p-3 mb-2 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''} ${colorClass}`;
                 el.draggable = true; el.id = task.id;
                 
+                // Tags HTML
+                let tagsHtml = "";
+                if (task.tags && task.tags.length > 0) {
+                    tagsHtml = `<div class="flex flex-wrap gap-1 mt-2">
+                        ${task.tags.map((tag, idx) => `
+                            <span onclick="removeTag('${task.id}', ${idx})" class="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">
+                                ${tag.name}
+                            </span>
+                        `).join('')}
+                    </div>`;
+                }
+
                 el.innerHTML = `
-                    <div class="flex items-center ${isOngoing ? 'justify-center' : 'justify-between'} w-full">
+                    <div class="flex items-center justify-between w-full">
                         ${isOngoing ? `
                             <input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">
                         ` : ''}
-                        <p class="task-text text-xs font-medium leading-relaxed break-words ${isOngoing ? '' : 'pr-4'}" ondblclick="enableEdit('${task.id}')" title="Double click to edit">${task.text}</p>
-                        ${!isOngoing ? `
-                            <button onclick="deleteTask('${task.id}')" class="task-action-btn opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-red-400 hover:text-red-600"><span class="material-symbols-rounded text-sm">close</span></button>
-                        ` : ''}
-                    </div>`;
+                        <p class="task-text task-text-content text-xs font-medium leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')" title="Double click to edit">${task.text}</p>
+                        <div class="task-action-btn flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            <button onclick="openTagPicker('${task.id}')" class="text-[var(--text-muted)] hover:text-blue-500"><span class="material-symbols-rounded text-sm">label</span></button>
+                            <button onclick="deleteTask('${task.id}')" class="text-red-400 hover:text-red-600"><span class="material-symbols-rounded text-sm">close</span></button>
+                        </div>
+                    </div>
+                    ${tagsHtml}`;
                 
                 el.addEventListener('dragstart', dragStart); el.addEventListener('dragend', dragEnd);
                 if(cols[task.status]) { cols[task.status].appendChild(el); counts[task.status]++; }
@@ -953,14 +1106,20 @@
         // --- Utils ---
         function generateReport() {
             const d = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            const formatTask = (t) => {
+                const tagsStr = (t.tags && t.tags.length > 0) ? ` (${t.tags.map(tg => tg.name).join(', ')})` : '';
+                return `- ${t.text}${tagsStr}`;
+            };
+
             const completed = tasks.filter(t => t.status === 'completed');
             const todo = tasks.filter(t => t.status === 'todo' || t.status === 'ongoing');
             const parked = tasks.filter(t => t.status === 'parked');
 
             let parts = [d];
-            if (completed.length > 0) parts.push(`Completed:\n${completed.map(t => `-${t.text}`).join('\n')}`);
-            if (todo.length > 0) parts.push(`To do:\n${todo.map(t => `-${t.text}`).join('\n')}`);
-            if (parked.length > 0) parts.push(`Parked:\n${parked.map(t => `-${t.text}`).join('\n')}`);
+            if (completed.length > 0) parts.push(`Completed:\n${completed.map(formatTask).join('\n')}`);
+            if (todo.length > 0) parts.push(`To do:\n${todo.map(formatTask).join('\n')}`);
+            if (parked.length > 0) parts.push(`Parked:\n${parked.map(formatTask).join('\n')}`);
             
             const txt = parts.join('\n\n');
             const el = document.createElement('textarea'); el.value = txt; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
