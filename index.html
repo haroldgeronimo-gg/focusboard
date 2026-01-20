@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FocusBoard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- NoSleep.js Library -->
     <script src="js/nosleep.min.js"></script>
     <script>
         tailwind.config = {
@@ -44,7 +43,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
-            /* Light Theme Variables */
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.8);
             --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
@@ -58,7 +56,6 @@
         }
 
         html.dark {
-            /* Dark Theme Variables */
             --glass-bg: rgba(20, 20, 20, 0.6);
             --glass-border: rgba(255, 255, 255, 0.1);
             --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
@@ -71,7 +68,6 @@
             --button-bg: rgba(255, 255, 255, 0.1);
         }
 
-        /* Material Icons Styling */
         .material-symbols-rounded {
             font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
             font-size: 20px;
@@ -98,11 +94,9 @@
             z-index: -1;
             transition: background 0.5s ease;
         }
-        html.dark .bg-overlay {
-            background: rgba(0, 0, 0, 0.3);
-        }
+        html.dark .bg-overlay { background: rgba(0, 0, 0, 0.3); }
 
-        *::-webkit-scrollbar { width: 4px; height: 4px; }
+        *::-webkit-scrollbar { width: 5px; height: 5px; }
         *::-webkit-scrollbar-track { background: transparent; }
         *::-webkit-scrollbar-thumb { background: var(--text-muted); opacity: 0.3; border-radius: 10px; }
 
@@ -122,7 +116,6 @@
             border-radius: 16px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: slideIn 0.4s ease-out forwards;
         }
         .glass-card:hover {
             transform: translateY(-2px) scale(1.01);
@@ -154,7 +147,6 @@
             border-color: transparent;
         }
         html.dark .glass-button:hover { color: #000; }
-        
         .glass-button:active { transform: scale(0.95); }
 
         .glass-button.active-mode {
@@ -188,6 +180,10 @@
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid var(--glass-border);
             box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
         .column.drag-over { background: var(--highlight) !important; border-color: var(--accent-color) !important; }
 
@@ -205,9 +201,7 @@
             border-radius: 9999px !important;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .swal2-cancel.swal2-styled {
-            border-radius: 9999px !important;
-        }
+        .swal2-cancel.swal2-styled { border-radius: 9999px !important; }
         html.dark .swal2-confirm.swal2-styled { color: black !important; }
 
         .settings-popover {
@@ -226,7 +220,6 @@
             -webkit-backdrop-filter: none !important;
         }
 
-        /* Enforce Transparency and No Glass in Focus Mode */
         body.focus-active .glass-card,
         body.focus-active .glass-panel,
         body.focus-active .column {
@@ -253,25 +246,28 @@
             justify-content: flex-start;
             height: 100%;
             gap: 1.5rem;
+            overflow: hidden; /* Constraint for internal scrolling */
+        }
+
+        body.focus-active #left-panel-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            flex-shrink: 0;
             overflow: visible;
         }
 
-        /* Reordering logic */
-        body.focus-active #left-panel-wrapper {
-            display: contents; 
-        }
-
         body.focus-active #left-panel-timer {
-            order: 1; 
             width: auto;
             max-width: none;
-            transform: scale(1.1); /* Enlarged timer */
+            transform: scale(1.1);
             margin-bottom: 0;
             padding-top: 1rem;
         }
 
         body.focus-active #timer-display {
-            font-size: 6.5rem; /* Larger compressed font */
+            font-size: 6.5rem;
             font-weight: 100;
             margin-bottom: 0.25rem;
         }
@@ -284,26 +280,27 @@
         }
 
         body.focus-active #right-panel-kanban {
-            order: 2; /* Middle - Primary Focus */
             grid-column: span 12;
             width: 100%;
             display: flex;
             justify-content: center;
-            overflow: visible;
             flex: 1;
-            align-items: center;
-            min-height: 0;
+            min-height: 0; /* Critical for inner scrolling */
+            overflow: hidden;
         }
         
         body.focus-active #kanban-grid {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             width: 100%;
+            height: 100%;
         }
 
         body.focus-active #col-wrapper-ongoing {
             width: 100%;
             max-width: 800px;
+            height: 100%;
         }
 
         body.focus-active div[data-status="ongoing"] {
@@ -311,6 +308,7 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
+            height: 100%;
         }
 
         body.focus-active .ongoing-task-card {
@@ -325,7 +323,7 @@
         }
 
         body.focus-active .ongoing-task-card .task-text {
-            font-size: 2.25rem; /* Large centered task */
+            font-size: 2.25rem;
             font-weight: 300;
             color: var(--text-main);
             text-align: center;
@@ -333,18 +331,11 @@
             width: auto;
         }
 
-        body.focus-active .ongoing-task-card .flex-wrap {
-            justify-content: center !important;
-        }
-
-        .focus-mode-checkbox {
-            display: none;
-        }
+        .focus-mode-checkbox { display: none; }
         body.focus-active .focus-mode-checkbox {
             display: block;
             appearance: none;
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             border: 2px solid var(--text-main);
             border-radius: 50%;
             cursor: pointer;
@@ -353,9 +344,7 @@
             margin-right: 2.5rem;
             flex-shrink: 0;
         }
-        body.focus-active .focus-mode-checkbox:checked {
-            background-color: var(--text-main);
-        }
+        body.focus-active .focus-mode-checkbox:checked { background-color: var(--text-main); }
         body.focus-active .focus-mode-checkbox:checked::after {
             content: 'done';
             font-family: 'Material Symbols Rounded';
@@ -367,42 +356,31 @@
             font-weight: bold;
         }
 
-        /* Focus Mode Dashboard (Highly Compressed at Bottom) */
+        /* Compressed Focus UI at Bottom */
         body.focus-active #left-panel-workday {
-            order: 3; /* Bottom */
             width: 100%;
-            max-width: 300px; /* Slimmer */
+            max-width: 300px;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
             text-align: center !important;
-            margin-bottom: 1rem; /* Less space at bottom */
-            gap: 0.25rem !important; /* Tight internal gaps */
-            padding: 0 !important; /* Zero padding */
+            margin-bottom: 0.5rem;
+            gap: 0.25rem !important;
+            padding: 0 !important;
+            flex-shrink: 0;
         }
         
-        body.focus-active #left-panel-workday > div.flex {
-            justify-content: center !important;
-            width: 100%;
-        }
-
-        body.focus-active #left-panel-workday .h-2.5 {
-            height: 3px !important; /* Ultra thin bar */
-        }
+        body.focus-active #left-panel-workday > div.flex { justify-content: center !important; width: 100%; }
+        body.focus-active #left-panel-workday .h-2.5 { height: 3px !important; }
         
         body.focus-active #left-panel-workday span.uppercase, 
         body.focus-active #work-start-display,
         body.focus-active #work-end-display,
         body.focus-active #clock-display,
-        body.focus-active #work-remaining {
-            display: none !important;
-        }
+        body.focus-active #work-remaining { display: none !important; }
         
-        body.focus-active #left-panel-workday #work-progress-bar {
-            background: var(--text-main);
-            opacity: 0.8;
-        }
+        body.focus-active #left-panel-workday #work-progress-bar { background: var(--text-main); opacity: 0.8; }
         
         body.focus-active .ambient-inline-controls {
             display: flex !important;
@@ -422,9 +400,7 @@
         }
         
         body.focus-active #volume-val,
-        body.focus-active .ambient-inline-controls .flex-col span {
-            display: none !important; /* Hide volume labels to compress */
-        }
+        body.focus-active .ambient-inline-controls .flex-col span { display: none !important; }
 
         #lunch-marker {
             position: absolute;
@@ -434,7 +410,6 @@
             pointer-events: none;
         }
 
-        /* Exit Button Position */
         #exit-focus-btn {
             opacity: 0;
             pointer-events: none;
@@ -453,45 +428,25 @@
         .swal-tag-pill {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            margin: 4px;
+            gap: 4px; padding: 4px 8px; margin: 4px;
             border-radius: 99px;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            font-size: 11px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s ease;
         }
-        .swal-tag-pill:hover {
-            transform: scale(1.05);
-            filter: brightness(0.9);
-        }
-        .swal-tag-delete {
-            opacity: 0.5;
-            cursor: pointer;
-        }
-        .swal-tag-delete:hover {
-            opacity: 1;
-            color: #ff3b30;
-        }
+        .swal-tag-pill:hover { transform: scale(1.05); filter: brightness(0.9); }
+        .swal-tag-delete { opacity: 0.5; cursor: pointer; }
+        .swal-tag-delete:hover { opacity: 1; color: #ff3b30; }
 
-        input[type=range] {
-            -webkit-appearance: none;
-            background: transparent;
-        }
+        input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%; height: 4px;
-            background: var(--text-main);
-            opacity: 0.2;
-            border-radius: 2px;
+            background: var(--text-main); opacity: 0.2; border-radius: 2px;
         }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 12px; width: 12px;
-            border-radius: 50%;
-            background: var(--text-main);
-            cursor: pointer;
-            margin-top: -4px;
+            border-radius: 50%; background: var(--text-main);
+            cursor: pointer; margin-top: -4px;
         }
     </style>
 </head>
@@ -609,21 +564,6 @@
                                     <span id="preview-ambient-icon" class="material-symbols-rounded text-sm">play_arrow</span>
                                 </button>
                             </div>
-                            <div class="flex items-end gap-2">
-                                <div class="flex-1">
-                                    <label class="text-[9px] opacity-60 block mb-1">Alarm Sound</label>
-                                    <select id="alarm-choice" onchange="updateAlarmChoice()" class="w-full glass-input px-2 py-1.5 text-xs bg-transparent dark:bg-zinc-800 focus:outline-none">
-                                        <option value="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">Short Beep</option>
-                                        <option value="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg">Digital Alarm</option>
-                                        <option value="https://actions.google.com/sounds/v1/alarms/mechanical_clock_ringing.ogg">Mechanical Bell</option>
-                                        <option value="https://actions.google.com/sounds/v1/alarms/phone_ringing_8.ogg">Phone Chime</option>
-                                        <option value="https://actions.google.com/sounds/v1/alarms/bugle_call.ogg">Bugle Call</option>
-                                    </select>
-                                </div>
-                                <button onclick="previewAlarm()" class="w-8 h-8 rounded-full glass-button flex items-center justify-center shrink-0" title="Preview Alarm">
-                                    <span class="material-symbols-rounded text-sm">volume_up</span>
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -640,10 +580,10 @@
             </div>
         </header>
 
-        <div id="content-grid" class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4 transition-all duration-700 ease-in-out p-1 overflow-visible">
-            <div id="left-panel-wrapper" class="md:col-span-4 flex flex-col gap-4 transition-all duration-500 overflow-y-auto pr-2 pb-4">
+        <div id="content-grid" class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4 transition-all duration-700 ease-in-out p-1">
+            <div id="left-panel-wrapper" class="md:col-span-4 flex flex-col gap-4 transition-all duration-500 overflow-y-auto pr-2 pb-4 min-h-0">
                 
-                <div id="left-panel-timer" class="glass-card p-4 flex flex-col items-center relative">
+                <div id="left-panel-timer" class="glass-card p-4 flex flex-col items-center relative shrink-0">
                     <div class="flex gap-1 mb-4 bg-black/5 p-1 rounded-full w-full">
                         <button onclick="setTimerMode('pomodoro')" id="btn-pomodoro" class="glass-button active-mode flex-1 py-1 text-[10px] font-bold shadow-none border-none">Focus</button>
                         <button onclick="setTimerMode('shortBreak')" id="btn-shortBreak" class="glass-button flex-1 py-1 text-[10px] font-bold shadow-none border-none">Short</button>
@@ -660,7 +600,7 @@
                     </div>
                 </div>
 
-                <div id="left-panel-workday" class="glass-card p-4 flex flex-col gap-3 transition-all duration-500 origin-top">
+                <div id="left-panel-workday" class="glass-card p-4 flex flex-col gap-3 transition-all duration-500 origin-top shrink-0">
                     <div class="flex flex-col gap-2">
                         <div class="flex justify-between items-end">
                             <span class="text-[10px] font-bold opacity-60 uppercase tracking-wider">Work Status</span>
@@ -705,33 +645,33 @@
 
             <div id="right-panel-kanban" class="md:col-span-8 h-full min-h-0 transition-all duration-500">
                 <div id="kanban-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 h-full transition-all duration-500">
-                    <div id="col-wrapper-todo" class="flex flex-col h-full column p-2" data-status="todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                    <div id="col-wrapper-todo" class="column p-2" data-status="todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                         <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider">To Do</span>
                             <span id="count-todo" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
+                        <div class="task-list flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
                     </div>
-                    <div id="col-wrapper-ongoing" class="flex flex-col h-full column p-2 border-indigo-200/30" data-status="ongoing" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                    <div id="col-wrapper-ongoing" class="column p-2 border-indigo-200/30" data-status="ongoing" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                         <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> Focus</span>
                             <span id="count-ongoing" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
+                        <div class="task-list flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
                     </div>
-                    <div id="col-wrapper-completed" class="flex flex-col h-full column p-2" data-status="completed" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                    <div id="col-wrapper-completed" class="column p-2" data-status="completed" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                         <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider">Done</span>
                             <span id="count-completed" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
+                        <div class="task-list flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
                     </div>
-                    <div id="col-wrapper-parked" class="flex flex-col h-full column p-2" data-status="parked" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                    <div id="col-wrapper-parked" class="column p-2" data-status="parked" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                         <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
                             <span class="text-[10px] font-bold uppercase tracking-wider">Later</span>
                             <span id="count-parked" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto pr-1 space-y-2 pb-4"></div>
+                        <div class="task-list flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
                     </div>
                 </div>
             </div>
@@ -747,46 +687,37 @@
     <audio id="ambient-sound" src="https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg" loop preload="auto"></audio>
 
     <script>
-        // --- NOSLEEP.JS LOGIC ---
-        let noSleep = null; // Initialize as null globally
+        let noSleep = null;
         let noSleepEnabled = false;
 
-        // Function to enable NoSleep on first interaction
         function enableNoSleep() {
             if (!noSleepEnabled) {
                 try {
-                    // Lazy-initialize NoSleep to ensure library is loaded
                     if (typeof NoSleep !== 'undefined') {
                         if (!noSleep) noSleep = new NoSleep();
                         noSleep.enable();
                         noSleepEnabled = true;
-                        // Once enabled, we can remove the listeners
                         document.removeEventListener('click', enableNoSleep);
                         document.removeEventListener('touchstart', enableNoSleep);
-                        console.log("NoSleep active: Screen will stay on.");
-                        showToast("Screen Lock Active 🛡️"); // Show bubble notification
+                        showToast("Screen Lock Active 🛡️");
                     }
-                } catch (err) {
-                    console.error("NoSleep could not be activated", err);
-                }
+                } catch (err) { console.error("NoSleep error", err); }
             }
         }
 
-        // Listen for the first click or touch to activate (required by browsers)
         document.addEventListener('click', enableNoSleep);
         document.addEventListener('touchstart', enableNoSleep);
-        // -------------------------
 
         let tasks = [];
         let globalTags = [];
         let timer = { timeLeft: 25 * 60, originalTime: 25 * 60, isRunning: false, intervalId: null, mode: 'pomodoro', endTime: null };
         let MODES = { pomodoro: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
-        let wakeLock = null;
         let isFocusMode = false;
         let shiftSettings = { start: '09:00', end: '18:00', breakStart: '12:00', breakEnd: '13:00' };
         let selectedAmbientUrl = "https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg";
         let selectedAlarmUrl = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
         let soundVolume = 0.5;
+        let draggedItem = null;
 
         const randomBackgrounds = [
             "1493246507139-91e8fad9978e", "1506744038136-46273834b3fb", "1532274402911-5a369e4c4bb5",
@@ -797,21 +728,14 @@
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadData(); loadSettings(); renderBoard(); updateTimerDisplay(); requestWakeLock();
+            loadData(); loadSettings(); renderBoard(); updateTimerDisplay();
             updateWorkDay(); setInterval(updateWorkDay, 60000);
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('settings-menu');
                 const btn = e.target.closest('button');
                 if (menu && !menu.contains(e.target) && (!btn || !btn.title.includes('Settings'))) menu.classList.remove('open');
             });
-        });
-        // Request notification permission
-        document.addEventListener('DOMContentLoaded', () => {
-            if ("Notification" in window) {
-            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-                Notification.requestPermission();
-            }
-            }
+            if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
         });
         
         function updateWorkDay() {
@@ -837,12 +761,10 @@
                 if (totalDuration > 0) {
                     const breakStartPct = Math.max(0, ((breakStartTime - startTime) / totalDuration) * 100);
                     const breakEndPct = Math.min(100, ((breakEndTime - startTime) / totalDuration) * 100);
-                    const breakWidthPct = breakEndPct - breakStartPct;
                     const marker = document.getElementById('lunch-marker');
                     if (marker) {
-                        if (breakWidthPct > 0) {
-                            marker.style.left = `${breakStartPct}%`;
-                            marker.style.width = `${breakWidthPct}%`;
+                        if (breakEndPct - breakStartPct > 0) {
+                            marker.style.left = `${breakStartPct}%`; marker.style.width = `${breakEndPct - breakStartPct}%`;
                             marker.style.display = 'block';
                         } else marker.style.display = 'none';
                     }
@@ -856,13 +778,8 @@
                     bar.classList.add('bg-red-500');
                 } else {
                     percentage = Math.min(100, Math.max(0, ((nowTime - startTime) / totalDuration) * 100));
-                    if (nowTime >= breakStartTime && nowTime < breakEndTime) {
-                        text = "Lunch Break 🍱"; bar.classList.add('bg-yellow-400');
-                    } else {
-                        const remaining = endTime - nowTime;
-                        text = `${Math.floor(remaining / 60)}h ${remaining % 60}m left`;
-                        bar.classList.add('bg-[var(--accent-color)]');
-                    }
+                    if (nowTime >= breakStartTime && nowTime < breakEndTime) { text = "Lunch Break 🍱"; bar.classList.add('bg-yellow-400'); }
+                    else { text = `${Math.floor((endTime - nowTime) / 60)}h ${(endTime - nowTime) % 60}m left`; bar.classList.add('bg-[var(--accent-color)]'); }
                 }
                 bar.style.width = `${percentage}%`;
                 const remainingEl = document.getElementById('work-remaining');
@@ -870,10 +787,7 @@
             }
         }
 
-        function toggleSettings() {
-            const menu = document.getElementById('settings-menu');
-            if (menu) menu.classList.toggle('open');
-        }
+        function toggleSettings() { const menu = document.getElementById('settings-menu'); if (menu) menu.classList.toggle('open'); }
 
         function setBackground(type, isInitialLoad = false) {
             if (type === 'default') document.body.style.background = 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)';
@@ -921,12 +835,11 @@
         }
 
         function updateShiftUI() {
-            const ss = document.getElementById('shift-start'); if (ss) ss.value = shiftSettings.start;
-            const se = document.getElementById('shift-end'); if (se) se.value = shiftSettings.end;
-            const bs = document.getElementById('break-start'); if (bs) bs.value = shiftSettings.breakStart;
-            const be = document.getElementById('break-end'); if (be) be.value = shiftSettings.breakEnd;
-            const wsd = document.getElementById('work-start-display'); if (wsd) wsd.innerText = shiftSettings.start;
-            const wed = document.getElementById('work-end-display'); if (wed) wed.innerText = shiftSettings.end;
+            const ids = ['shift-start','shift-end','break-start','break-end'];
+            const vals = [shiftSettings.start, shiftSettings.end, shiftSettings.breakStart, shiftSettings.breakEnd];
+            ids.forEach((id, i) => { if(document.getElementById(id)) document.getElementById(id).value = vals[i]; });
+            if(document.getElementById('work-start-display')) document.getElementById('work-start-display').innerText = shiftSettings.start;
+            if(document.getElementById('work-end-display')) document.getElementById('work-end-display').innerText = shiftSettings.end;
         }
 
         function loadSettings() {
@@ -937,9 +850,7 @@
                 if(bg) { document.body.style.backgroundImage = bg.startsWith('data:') ? `url(${bg})` : `url('${bg}')`; document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center'; }
             } else setBackground(type, true);
 
-            try {
-                const savedShift = JSON.parse(localStorage.getItem('focusBoardShift')); if(savedShift) shiftSettings = savedShift;
-            } catch(e) {}
+            try { const savedShift = JSON.parse(localStorage.getItem('focusBoardShift')); if(savedShift) shiftSettings = savedShift; } catch(e) {}
             updateShiftUI();
 
             try {
@@ -957,11 +868,10 @@
                     selectedAmbientUrl = savedSounds.ambient || "https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg";
                     selectedAlarmUrl = savedSounds.alarm || "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
                     soundVolume = savedSounds.volume !== undefined ? savedSounds.volume : 0.5;
-                    document.getElementById('ambient-choice').value = selectedAmbientUrl; document.getElementById('alarm-choice').value = selectedAlarmUrl;
+                    document.getElementById('ambient-choice').value = selectedAmbientUrl;
                     document.getElementById('volume-control').value = soundVolume; document.getElementById('volume-val').innerText = `${Math.round(soundVolume * 100)}%`;
                 }
                 const ambient = document.getElementById('ambient-sound'); if (ambient) { ambient.src = selectedAmbientUrl; ambient.volume = soundVolume; }
-                const alarm = document.getElementById('alarm-sound'); if (alarm) { alarm.src = selectedAlarmUrl; }
             } catch(e) {}
         }
 
@@ -974,11 +884,11 @@
 
         async function toggleAmbientSound() {
             const audio = document.getElementById('ambient-sound'); const icon = document.getElementById('ambient-icon');
-            if (!audio.src || audio.src === window.location.href || audio.src.includes('undefined')) { audio.src = selectedAmbientUrl; audio.load(); }
+            if (!audio.src || audio.src === window.location.href) { audio.src = selectedAmbientUrl; audio.load(); }
             try {
                 if (audio.paused) { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); }
                 else { audio.pause(); icon.innerText = "play_arrow"; document.getElementById('ambient-play-btn').classList.remove('active-mode'); }
-            } catch (err) { audio.load(); showToast("Sound error. Retrying..."); }
+            } catch (err) { console.error(err); }
         }
 
         async function previewAmbient() {
@@ -988,17 +898,13 @@
             else { audio.src = selected; audio.load(); try { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-icon').innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); } catch(e) {} }
         }
 
-        function previewAlarm() { const alarm = document.getElementById('alarm-sound'); const selected = document.getElementById('alarm-choice').value; alarm.src = selected; alarm.load(); alarm.play().catch(e => console.error(e)); }
-
         function updateAmbientChoice() {
             selectedAmbientUrl = document.getElementById('ambient-choice').value; const audio = document.getElementById('ambient-sound');
             if (audio) { const wasPlaying = !audio.paused; audio.src = selectedAmbientUrl; audio.load(); if (wasPlaying) audio.play(); }
             saveSoundSettings();
         }
 
-        function updateAlarmChoice() { selectedAlarmUrl = document.getElementById('alarm-choice').value; const alarm = document.getElementById('alarm-sound'); if (alarm) { alarm.src = selectedAlarmUrl; alarm.load(); } saveSoundSettings(); }
-
-        function saveSoundSettings() { localStorage.setItem('focusBoardSounds', JSON.stringify({ ambient: selectedAmbientUrl, alarm: selectedAlarmUrl, volume: soundVolume })); }
+        function saveSoundSettings() { localStorage.setItem('focusBoardSounds', JSON.stringify({ ambient: selectedAmbientUrl, volume: soundVolume })); }
 
         function setTimerMode(m) { 
             stopTimer(); timer.mode = m; timer.timeLeft = MODES[m]; timer.originalTime = MODES[m]; 
@@ -1013,7 +919,7 @@
             timer.intervalId = setInterval(() => {
                 const diff = Math.ceil((timer.endTime - Date.now()) / 1000);
                 if(diff >= 0) { timer.timeLeft = diff; updateTimerDisplay(); } else { completeTimer(); }
-            }, 1000); requestWakeLock(); 
+            }, 1000);
         }
         function stopTimer() { timer.isRunning = false; clearInterval(timer.intervalId); const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'play_arrow'; document.title = "FocusBoard"; }
         function resetTimer() { stopTimer(); timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
@@ -1022,20 +928,16 @@
             const d = document.getElementById('timer-display'); if (d) d.innerText = `${m}:${s}`;
             if(timer.isRunning) document.title = `(${m}:${s}) FocusBoard`;
         }
-        function completeTimer() { stopTimer(); const a = document.getElementById('alarm-sound'); if(a) a.play().catch(()=>{}); showToast("Timer Finished!"); 
-                                  if ("Notification" in window && Notification.permission === "granted") {
-                                            new Notification("FocusBoard", {
-                                                body: "Time's up! Take a break or start a new session.",
-                                                icon: "https://cdn-icons-png.flaticon.com/512/2553/2553391.png"
-                                            });
-                                    }
-                                  timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
+        function completeTimer() { 
+            stopTimer(); const a = document.getElementById('alarm-sound'); if(a) a.play().catch(()=>{}); showToast("Timer Finished!"); 
+            if ("Notification" in window && Notification.permission === "granted") new Notification("FocusBoard", { body: "Time's up! Session finished." });
+            timer.timeLeft = timer.originalTime; updateTimerDisplay(); 
+        }
 
         function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('focusBoardTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }
         function loadTheme() { if(localStorage.getItem('focusBoardTheme') === 'dark') document.documentElement.classList.add('dark'); }
-        async function requestWakeLock() { if('wakeLock' in navigator) try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){} }
 
-        // --- Kanban & Tasks ---
+        // --- Kanban Logic ---
         function getLibraryHtml() {
             if (globalTags.length === 0) return '<p class="text-[10px] opacity-40 italic">No saved tags</p>';
             return globalTags.map(tag => `<div class="swal-tag-pill bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30" data-name="${tag.name}" data-color="${tag.color}"><span>${tag.name}</span><span class="swal-tag-delete material-symbols-rounded text-[10px]" data-delete="${tag.name}">close</span></div>`).join('');
@@ -1083,7 +985,7 @@
         function completeTaskFromFocus(id) { const t = tasks.find(x => x.id === id); if (t) { t.status = 'completed'; saveData(); showToast('Done!'); renderBoard(); } }
 
         function renderBoard() {
-            const cols = { todo: document.querySelector('#col-wrapper-todo .flex-1'), ongoing: document.querySelector('#col-wrapper-ongoing .flex-1'), completed: document.querySelector('#col-wrapper-completed .flex-1'), parked: document.querySelector('#col-wrapper-parked .flex-1') };
+            const cols = { todo: document.querySelector('#col-wrapper-todo .task-list'), ongoing: document.querySelector('#col-wrapper-ongoing .task-list'), completed: document.querySelector('#col-wrapper-completed .task-list'), parked: document.querySelector('#col-wrapper-parked .task-list') };
             Object.values(cols).forEach(c => { if(c) c.innerHTML = ''; });
             const counts = { todo: 0, ongoing: 0, completed: 0, parked: 0 };
             tasks.forEach(task => {
