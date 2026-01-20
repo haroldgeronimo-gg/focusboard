@@ -448,6 +448,14 @@
             border-radius: 50%; background: var(--text-main);
             cursor: pointer; margin-top: -4px;
         }
+
+        /* Level & XP Styles */
+        .xp-bar { height: 4px; background: rgba(0,0,0,0.1); border-radius: 2px; overflow: hidden; width: 60px; }
+        .xp-fill { height: 100%; background: var(--accent-color); transition: width 0.5s ease; }
+        
+        /* Estimate Dots Styles */
+        .estimate-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--text-main); opacity: 0.3; }
+        .estimate-dot.filled { background: #ff453a; border-color: #ff453a; opacity: 1; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 sm:p-6">
@@ -464,7 +472,13 @@
                 <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md shadow-sm">
                     <span class="material-symbols-rounded text-2xl">timer</span>
                 </div>
-                <h1 class="text-xl font-bold tracking-tight opacity-90">FocusBoard</h1>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight opacity-90 leading-tight">FocusBoard</h1>
+                    <div class="flex items-center gap-2">
+                        <span id="level-display" class="text-[10px] font-bold uppercase tracking-widest text-blue-500">Level 1</span>
+                        <div class="xp-bar"><div id="xp-fill" class="xp-fill" style="width: 0%"></div></div>
+                    </div>
+                </div>
             </div>
             
             <div class="flex gap-2 relative">
@@ -481,9 +495,9 @@
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Wallpaper</span>
                         <div class="grid grid-cols-4 gap-2">
                             <button onclick="setBackground('default')" class="h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 border border-black/5 hover:scale-110 transition" title="Default"></button>
-                            <button onclick="setBackground('nature')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=200&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition" title="Nature"></button>
-                            <button onclick="setBackground('abstract')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=200&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition" title="Abstract"></button>
-                            <button onclick="setBackground('minimal')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=200&auto=format&fit=crop')] bg-cover border border-black/5 hover:scale-110 transition" title="Minimal"></button>
+                            <button onclick="setBackground('nature')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2560')] bg-cover border border-black/5 hover:scale-110 transition" title="Nature"></button>
+                            <button onclick="setBackground('abstract')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2560')] bg-cover border border-black/5 hover:scale-110 transition" title="Abstract"></button>
+                            <button onclick="setBackground('minimal')" class="h-8 rounded-lg bg-[url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=2560')] bg-cover border border-black/5 hover:scale-110 transition" title="Minimal"></button>
                         </div>
                         <div class="flex gap-2 mt-2">
                             <label class="glass-button flex-1 py-2 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer">
@@ -598,7 +612,14 @@
                         <button onclick="setTimerMode('shortBreak')" id="btn-shortBreak" class="glass-button flex-1 py-1 text-[10px] font-bold shadow-none border-none">Short</button>
                         <button onclick="setTimerMode('longBreak')" id="btn-longBreak" class="glass-button flex-1 py-1 text-[10px] font-bold shadow-none border-none">Long</button>
                     </div>
-                    <div id="timer-display" class="text-5xl font-extralight tracking-tight mb-4 tabular-nums">25:00</div>
+                    <div id="timer-display" class="text-5xl font-extralight tracking-tight mb-2 tabular-nums">25:00</div>
+                    
+                    <!-- Streak Counter -->
+                    <div id="streak-counter" class="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-4 flex items-center gap-1">
+                        <span class="material-symbols-rounded text-sm">local_fire_department</span>
+                        <span id="streak-val">0 Streak</span>
+                    </div>
+
                     <div class="flex gap-3">
                         <button onclick="toggleTimer()" id="btn-toggle" class="w-10 h-10 rounded-full bg-[var(--text-main)] text-[var(--glass-bg)] flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shadow-lg">
                             <span id="icon-play" class="material-symbols-rounded text-2xl ml-0.5">play_arrow</span>
@@ -643,11 +664,20 @@
                 </div>
 
                 <div id="left-panel-input" class="glass-card p-4 transition-all duration-500 ease-in-out origin-top shrink-0">
-                    <form onsubmit="addTask(event)" class="relative">
-                        <input type="text" id="task-input" placeholder="Add task..." class="w-full glass-input pl-4 pr-12 py-3 text-sm font-medium placeholder-opacity-50 focus:outline-none">
-                        <button type="submit" class="absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">
-                            <span class="material-symbols-rounded">add_circle</span>
-                        </button>
+                    <form onsubmit="addTask(event)" class="flex flex-col gap-3">
+                        <div class="relative">
+                            <input type="text" id="task-input" placeholder="What needs doing?" class="w-full glass-input pl-4 pr-4 py-3 text-sm font-medium placeholder-opacity-50 focus:outline-none">
+                        </div>
+                        <div class="flex items-center justify-between px-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-bold uppercase opacity-50">Estimate:</span>
+                                <input type="number" id="task-estimate" min="1" max="10" value="1" class="w-12 glass-input px-2 py-1 text-xs text-center focus:outline-none">
+                                <span class="text-[10px] opacity-40">Pomos</span>
+                            </div>
+                            <button type="submit" class="glass-button px-4 py-1.5 text-xs font-bold flex items-center gap-1 hover:bg-blue-500 hover:text-white">
+                                <span class="material-symbols-rounded text-sm">add</span> Add
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -688,7 +718,7 @@
     </div>
 
     <div id="toast" class="glass-panel fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-32 opacity-0 transition-all duration-300 flex items-center gap-2 px-5 py-2.5 rounded-full z-50 text-sm font-medium shadow-2xl">
-        <span class="material-symbols-rounded text-green-500 text-lg">check_circle</span>
+        <span id="toast-icon" class="material-symbols-rounded text-green-500 text-lg">check_circle</span>
         <span id="toast-msg">Notification</span>
     </div>
 
@@ -719,7 +749,9 @@
 
         let tasks = [];
         let globalTags = [];
-        let teamsUsername = ""; // New state for teams contact
+        let teamsUsername = "";
+        let userData = { xp: 0, level: 1, streak: 0 }; 
+
         let timer = { timeLeft: 25 * 60, originalTime: 25 * 60, isRunning: false, intervalId: null, mode: 'pomodoro', endTime: null };
         let MODES = { pomodoro: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
         let isFocusMode = false;
@@ -738,7 +770,7 @@
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadData(); loadSettings(); renderBoard(); updateTimerDisplay();
+            loadData(); loadSettings(); renderBoard(); updateTimerDisplay(); updateGamificationUI();
             updateWorkDay(); setInterval(updateWorkDay, 60000);
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('settings-menu');
@@ -747,6 +779,29 @@
             });
             if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
         });
+
+        function updateGamificationUI() {
+            const level = Math.floor(Math.sqrt(userData.xp / 100)) + 1;
+            const xpInCurrentLevel = userData.xp - (Math.pow(level - 1, 2) * 100);
+            const xpNeededForNext = (Math.pow(level, 2) * 100) - (Math.pow(level - 1, 2) * 100);
+            const progress = (xpInCurrentLevel / xpNeededForNext) * 100;
+
+            if (level > userData.level) {
+                Swal.fire({ title: 'Level Up!', text: `You reached Level ${level}!`, icon: 'success', timer: 3000 });
+                userData.level = level;
+            }
+
+            document.getElementById('level-display').innerText = `Level ${level}`;
+            document.getElementById('xp-fill').style.width = `${progress}%`;
+            document.getElementById('streak-val').innerText = `${userData.streak} Streak`;
+            saveData();
+        }
+
+        function addXP(amount) {
+            userData.xp += amount;
+            showToast(`+${amount} XP`, 'stars');
+            updateGamificationUI();
+        }
         
         function updateWorkDay() {
             const now = new Date();
@@ -940,16 +995,39 @@
             }, 1000);
         }
         function stopTimer() { timer.isRunning = false; clearInterval(timer.intervalId); const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'play_arrow'; document.title = "FocusBoard"; }
-        function resetTimer() { stopTimer(); timer.timeLeft = timer.originalTime; updateTimerDisplay(); }
+        function resetTimer() { 
+            stopTimer(); 
+            if (timer.mode === 'pomodoro') userData.streak = 0; 
+            timer.timeLeft = timer.originalTime; 
+            updateTimerDisplay(); 
+            updateGamificationUI();
+        }
         function updateTimerDisplay() {
             const m = Math.floor(timer.timeLeft / 60).toString().padStart(2,'0'); const s = (timer.timeLeft % 60).toString().padStart(2,'0');
             const d = document.getElementById('timer-display'); if (d) d.innerText = `${m}:${s}`;
             if(timer.isRunning) document.title = `(${m}:${s}) FocusBoard`;
         }
         function completeTimer() { 
-            stopTimer(); const a = document.getElementById('alarm-sound'); if(a) a.play().catch(()=>{}); showToast("Timer Finished!"); 
-            if ("Notification" in window && Notification.permission === "granted") new Notification("FocusBoard", { body: "Time's up! Session finished." });
-            timer.timeLeft = timer.originalTime; updateTimerDisplay(); 
+            stopTimer(); const a = document.getElementById('alarm-sound'); if(a) a.play().catch(()=>{}); 
+            
+            if (timer.mode === 'pomodoro') {
+                userData.streak++;
+                addXP(25 + (userData.streak * 5)); 
+                
+                tasks.filter(t => t.status === 'ongoing').forEach(t => {
+                    t.completedPomos = (t.completedPomos || 0) + 1;
+                });
+                renderBoard();
+                showToast("Focus Finished!"); 
+            } else {
+                showToast("Break Finished!", "energy_savings_leaf");
+            }
+            
+            if ("Notification" in window && Notification.permission === "granted") new Notification("FocusBoard", { body: timer.mode === 'pomodoro' ? "Focus Session Complete!" : "Break Over!" });
+            
+            timer.timeLeft = timer.originalTime; 
+            updateTimerDisplay(); 
+            updateGamificationUI();
         }
 
         function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('focusBoardTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }
@@ -983,7 +1061,23 @@
             }
         }
 
-        function addTask(e) { e.preventDefault(); const i = document.getElementById('task-input'); const t = i.value.trim(); if (t) { tasks.push({ id: Date.now().toString(), text: t, status: 'todo', tags: [] }); saveData(); renderBoard(); i.value = ''; showToast('Task Added'); } }
+        function addTask(e) { 
+            e.preventDefault(); 
+            const i = document.getElementById('task-input'); 
+            const est = parseInt(document.getElementById('task-estimate').value) || 1;
+            const t = i.value.trim(); 
+            if (t) { 
+                tasks.push({ 
+                    id: Date.now().toString(), 
+                    text: t, 
+                    status: 'todo', 
+                    tags: [], 
+                    estimate: est, 
+                    completedPomos: 0 
+                }); 
+                saveData(); renderBoard(); i.value = ''; showToast('Task Added'); 
+            } 
+        }
         function deleteTask(id) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', width: 300 }).then((res) => { if(res.isConfirmed) { tasks = tasks.filter(t => t.id !== id); saveData(); renderBoard(); } }); }
         function removeTag(taskId, idx) { const t = tasks.find(x => x.id === taskId); if (t && t.tags) { t.tags.splice(idx, 1); saveData(); renderBoard(); } }
         function enableEdit(id) {
@@ -997,10 +1091,27 @@
         function allowDrop(e) { e.preventDefault(); }
         function dragEnter(e) { e.preventDefault(); const c = e.target.closest('.column'); if(c) c.classList.add('drag-over'); }
         function dragLeave(e) { const c = e.target.closest('.column'); if(c) c.classList.remove('drag-over'); }
-        function drop(e) { e.preventDefault(); const c = e.target.closest('[data-status]'); if(c) c.classList.remove('drag-over'); if(c && draggedItem) { tasks.find(t => t.id === draggedItem.id).status = c.getAttribute('data-status'); saveData(); renderBoard(); } }
+        function drop(e) { 
+            e.preventDefault(); 
+            const c = e.target.closest('[data-status]'); 
+            if(c) c.classList.remove('drag-over'); 
+            if(c && draggedItem) { 
+                const task = tasks.find(t => t.id === draggedItem.id);
+                const oldStatus = task.status;
+                const newStatus = c.getAttribute('data-status');
+                
+                if (oldStatus !== newStatus) {
+                    task.status = newStatus;
+                    if (newStatus === 'completed') {
+                        addXP(50);
+                    }
+                    saveData(); renderBoard(); 
+                }
+            } 
+        }
 
         function toggleFocusMode() { isFocusMode = !isFocusMode; document.body.classList.toggle('focus-active'); showToast(isFocusMode ? 'Focus Active' : 'Focus Exited'); renderBoard(); }
-        function completeTaskFromFocus(id) { const t = tasks.find(x => x.id === id); if (t) { t.status = 'completed'; saveData(); showToast('Done!'); renderBoard(); } }
+        function completeTaskFromFocus(id) { const t = tasks.find(x => x.id === id); if (t) { t.status = 'completed'; addXP(50); saveData(); showToast('Done!'); renderBoard(); } }
 
         function renderBoard() {
             const cols = { todo: document.querySelector('#col-wrapper-todo .task-list'), ongoing: document.querySelector('#col-wrapper-ongoing .task-list'), completed: document.querySelector('#col-wrapper-completed .task-list'), parked: document.querySelector('#col-wrapper-parked .task-list') };
@@ -1011,8 +1122,18 @@
                 let cc = (task.tags && task.tags.length > 0) ? `tag-${task.tags[0].color}` : "";
                 el.className = `glass-card p-3 mb-2 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''} ${cc}`;
                 el.draggable = true; el.id = task.id;
+                
+                let dotsHtml = '<div class="flex gap-1 mt-2">';
+                const estimate = task.estimate || 1;
+                const completed = task.completedPomos || 0;
+                for(let i=0; i < estimate; i++) {
+                    const filled = i < completed ? 'filled' : '';
+                    dotsHtml += `<div class="estimate-dot ${filled}"></div>`;
+                }
+                dotsHtml += '</div>';
+
                 let th = (task.tags && task.tags.length > 0) ? `<div class="flex flex-wrap gap-1 mt-2">${task.tags.map((tg, i) => `<span onclick="removeTag('${task.id}', ${i})" class="text-[8px] opacity-90 font-bold px-2 py-0.5 rounded-full bg-${tg.color}-500/20 text-${tg.color}-500 border border-${tg.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">${tg.name}</span>`).join('')}</div>` : "";
-                el.innerHTML = `<div class="flex items-center justify-between w-full">${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">` : ''}<p class="task-text task-text-content text-xs font-medium leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')">${task.text}</p><div class="task-action-btn flex gap-1 opacity-40 hover:opacity-100 transition-opacity shrink-0"><button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">label</span></button><button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">close</span></button></div></div>${th}`;
+                el.innerHTML = `<div class="flex items-center justify-between w-full">${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">` : ''}<div class="flex-1"><p class="task-text task-text-content text-xs font-semibold leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')">${task.text}</p>${dotsHtml}</div><div class="task-action-btn flex gap-1 opacity-40 hover:opacity-100 transition-opacity shrink-0"><button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">label</span></button><button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">close</span></button></div></div>${th}`;
                 el.addEventListener('dragstart', dragStart); el.addEventListener('dragend', dragEnd);
                 if(cols[task.status]) { cols[task.status].appendChild(el); counts[task.status]++; }
             });
@@ -1023,9 +1144,10 @@
             const d = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             const fmt = (t) => `- ${t.text}${ (t.tags && t.tags.length > 0) ? ` (${t.tags.map(tg => tg.name).join(', ')})` : '' }`;
             const comp = tasks.filter(x => x.status === 'completed'); const todo = tasks.filter(x => x.status === 'todo' || x.status === 'ongoing'); const pk = tasks.filter(x => x.status === 'parked');
-            let txt = `*Scrum Report - ${d}*\n\n*Completed:*\n${comp.map(fmt).join('\n') || '- None'}\n\n*To do:*\n${todo.map(fmt).join('\n') || '- None'}\n\n*Parked:*\n${pk.map(fmt).join('\n') || '- None'}`;
+            
+            const txt = `*Scrum Report - ${d}*\n\n*Completed:*\n${comp.map(fmt).join('\n') || '- None'}\n\n*To do:*\n${todo.map(fmt).join('\n') || '- None'}\n\n*Parked:*\n${pk.map(fmt).join('\n') || '- None'}`;
 
-            const { value: action } = await Swal.fire({
+            const result = await Swal.fire({
                 title: 'Share Scrum Report',
                 text: 'How would you like to export your report?',
                 icon: 'info',
@@ -1037,35 +1159,57 @@
                 footer: teamsUsername ? `Recipient: ${teamsUsername}` : 'Set Teams username in Settings'
             });
 
-            if (action) {
+            if (result.isConfirmed) {
                 if (!teamsUsername) {
                     showToast("Please set Teams username in Settings");
                     toggleSettings();
                     return;
                 }
-                // MS Teams Deep Link format
                 const encodedMsg = encodeURIComponent(txt);
                 const teamsUrl = `https://teams.microsoft.com/l/chat/0/0?users=${teamsUsername}&message=${encodedMsg}`;
                 window.open(teamsUrl, '_blank');
-            } else if (Swal.getIcon() && !Swal.isVisible()) {
-                // If the user closed or clicked 'Cancel' (Clipboard)
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                // Clipboard Logic
                 const el = document.createElement('textarea');
-                el.value = txt.replace(/\*/g, ''); // Remove markdown formatting for plain text clipboard
+                el.value = txt.replace(/\*/g, ''); // Clear markdown markers for clipboard
+                el.style.position = 'fixed'; // Ensure it's not visible or affecting layout
+                el.style.left = '-9999px';
+                el.style.top = '0';
                 document.body.appendChild(el);
                 el.select();
-                document.execCommand('copy');
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        showToast('Report Copied to Clipboard');
+                    } else {
+                        showToast('Copying failed', 'error');
+                    }
+                } catch (err) {
+                    showToast('Copy error', 'error');
+                }
                 document.body.removeChild(el);
-                showToast('Report Copied to Clipboard');
             }
         }
 
-        function saveData() { localStorage.setItem('pomodoroKanbanTasks', JSON.stringify(tasks)); }
+        function saveData() { 
+            localStorage.setItem('pomodoroKanbanTasks', JSON.stringify(tasks)); 
+            localStorage.setItem('focusBoardUser', JSON.stringify(userData));
+        }
         function loadData() { 
             try { tasks = JSON.parse(localStorage.getItem('pomodoroKanbanTasks')) || []; } catch(e) { tasks = []; }
             try { globalTags = JSON.parse(localStorage.getItem('focusBoardGlobalTags')) || []; } catch(e) { globalTags = []; }
+            try { userData = JSON.parse(localStorage.getItem('focusBoardUser')) || { xp: 0, level: 1, streak: 0 }; } catch(e) { userData = { xp: 0, level: 1, streak: 0 }; }
         }
-        function clearAllData() { Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed) { tasks=[]; saveData(); renderBoard(); showToast('Cleared'); }}); }
-        function showToast(msg) { const t = document.getElementById('toast'); if (t) { document.getElementById('toast-msg').innerText = msg; t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500); } }
+        function clearAllData() { Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed) { tasks=[]; userData = { xp: 0, level: 1, streak: 0 }; saveData(); renderBoard(); updateGamificationUI(); showToast('Cleared'); }}); }
+        function showToast(msg, icon = 'check_circle') { 
+            const t = document.getElementById('toast'); 
+            if (t) { 
+                document.getElementById('toast-msg').innerText = msg; 
+                document.getElementById('toast-icon').innerText = icon;
+                t.classList.remove('translate-y-32', 'opacity-0'); 
+                setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500); 
+            } 
+        }
     </script>
 </body>
 </html>
