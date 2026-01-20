@@ -246,7 +246,7 @@
             justify-content: flex-start;
             height: 100%;
             gap: 1.5rem;
-            overflow: hidden;
+            overflow: hidden; /* Constraint for internal scrolling */
         }
 
         body.focus-active #left-panel-wrapper {
@@ -285,7 +285,7 @@
             display: flex;
             justify-content: center;
             flex: 1;
-            min-height: 0;
+            min-height: 0; /* Critical for inner scrolling */
             overflow: hidden;
         }
         
@@ -496,12 +496,12 @@
                         </div>
                     </div>
 
-                    <!-- Microsoft Teams Contact -->
+                    <!-- Teams Setup -->
                     <div class="border-t border-gray-400/20 pt-2">
-                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Microsoft Teams</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Microsoft Teams Integration</span>
                         <div class="px-1">
-                            <label class="text-[9px] opacity-60 block mb-1">Recipient Email/Username</label>
-                            <input type="text" id="teams-contact" onchange="saveTeamsSettings()" placeholder="john.doe@company.com" class="w-full glass-input px-3 py-1.5 text-xs focus:outline-none">
+                            <label class="text-[9px] opacity-60 block mb-1">Send Report To (Teams Username/Email)</label>
+                            <input type="text" id="teams-username" onchange="saveTeamsSettings()" placeholder="user@company.com" class="w-full glass-input px-3 py-1.5 text-xs focus:outline-none">
                         </div>
                     </div>
 
@@ -511,11 +511,11 @@
                         <div class="flex gap-2 px-1 mb-3">
                             <div class="flex-1">
                                 <label class="text-[9px] opacity-60 block mb-1">Start</label>
-                                <input type="time" id="shift-start" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1.5 text-xs focus:outline-none">
+                                <input type="time" id="shift-start" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
                             </div>
                             <div class="flex-1">
                                 <label class="text-[9px] opacity-60 block mb-1">End</label>
-                                <input type="time" id="shift-end" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1.5 text-xs focus:outline-none">
+                                <input type="time" id="shift-end" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
                             </div>
                         </div>
                         
@@ -523,11 +523,11 @@
                         <div class="flex gap-2 px-1">
                             <div class="flex-1">
                                 <label class="text-[9px] opacity-60 block mb-1">Start</label>
-                                <input type="time" id="break-start" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1.5 text-xs focus:outline-none">
+                                <input type="time" id="break-start" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
                             </div>
                             <div class="flex-1">
                                 <label class="text-[9px] opacity-60 block mb-1">End</label>
-                                <input type="time" id="break-end" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1.5 text-xs focus:outline-none">
+                                <input type="time" id="break-end" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
                             </div>
                         </div>
                     </div>
@@ -538,15 +538,15 @@
                         <div class="grid grid-cols-3 gap-2 px-1">
                             <div>
                                 <label class="text-[9px] opacity-60 block mb-1">Focus</label>
-                                <input type="number" id="time-focus" min="1" onchange="saveTimerSettings()" class="w-full glass-input px-2 py-1.5 text-xs focus:outline-none">
+                                <input type="number" id="time-focus" min="1" onchange="saveTimerSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
                             </div>
                             <div>
                                 <label class="text-[9px] opacity-60 block mb-1">Short</label>
-                                <input type="number" id="time-short" min="1" onchange="saveTimerSettings()" class="w-full glass-input px-2 py-1.5 text-xs focus:outline-none">
+                                <input type="number" id="time-short" min="1" onchange="saveTimerSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
                             </div>
                             <div>
                                 <label class="text-[9px] opacity-60 block mb-1">Long</label>
-                                <input type="number" id="time-long" min="1" onchange="saveTimerSettings()" class="w-full glass-input px-2 py-1.5 text-xs focus:outline-none">
+                                <input type="number" id="time-long" min="1" onchange="saveTimerSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
                             </div>
                         </div>
                     </div>
@@ -580,10 +580,10 @@
                 <button onclick="toggleDarkMode()" class="glass-button w-9 h-9 flex items-center justify-center" title="Theme">
                     <span id="theme-icon" class="material-symbols-rounded">dark_mode</span>
                 </button>
-                <button onclick="handleReport()" class="glass-button w-9 h-9 flex items-center justify-center" title="Report & Share">
+                <button onclick="generateReport()" class="glass-button w-9 h-9 flex items-center justify-center" title="Report">
                     <span class="material-symbols-rounded">description</span>
                 </button>
-                <button onclick="clearAllData()" class="glass-button w-9 h-9 flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500 border-red-200" title="Clear All Data">
+                <button onclick="clearAllData()" class="glass-button w-9 h-9 flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500 border-red-200" title="Clear">
                     <span class="material-symbols-rounded">delete_sweep</span>
                 </button>
             </div>
@@ -699,14 +699,33 @@
         let noSleep = null;
         let noSleepEnabled = false;
 
+        function enableNoSleep() {
+            if (!noSleepEnabled) {
+                try {
+                    if (typeof NoSleep !== 'undefined') {
+                        if (!noSleep) noSleep = new NoSleep();
+                        noSleep.enable();
+                        noSleepEnabled = true;
+                        document.removeEventListener('click', enableNoSleep);
+                        document.removeEventListener('touchstart', enableNoSleep);
+                        showToast("Screen Lock Active 🛡️");
+                    }
+                } catch (err) { console.error("NoSleep error", err); }
+            }
+        }
+
+        document.addEventListener('click', enableNoSleep);
+        document.addEventListener('touchstart', enableNoSleep);
+
         let tasks = [];
         let globalTags = [];
-        let teamsContact = "";
+        let teamsUsername = ""; // New state for teams contact
         let timer = { timeLeft: 25 * 60, originalTime: 25 * 60, isRunning: false, intervalId: null, mode: 'pomodoro', endTime: null };
         let MODES = { pomodoro: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
         let isFocusMode = false;
         let shiftSettings = { start: '09:00', end: '18:00', breakStart: '12:00', breakEnd: '13:00' };
         let selectedAmbientUrl = "https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg";
+        let selectedAlarmUrl = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
         let soundVolume = 0.5;
         let draggedItem = null;
 
@@ -724,9 +743,7 @@
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('settings-menu');
                 const btn = e.target.closest('button');
-                if (menu && !menu.contains(e.target) && (!btn || (!btn.title.includes('Settings') && !btn.closest('.settings-popover')))) {
-                    menu.classList.remove('open');
-                }
+                if (menu && !menu.contains(e.target) && (!btn || !btn.title.includes('Settings'))) menu.classList.remove('open');
             });
             if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
         });
@@ -828,8 +845,8 @@
         }
 
         function saveTeamsSettings() {
-            teamsContact = document.getElementById('teams-contact').value.trim();
-            localStorage.setItem('focusBoardTeamsContact', teamsContact);
+            teamsUsername = document.getElementById('teams-username').value.trim();
+            localStorage.setItem('focusBoardTeamsUser', teamsUsername);
         }
 
         function updateShiftUI() {
@@ -851,8 +868,8 @@
             try { const savedShift = JSON.parse(localStorage.getItem('focusBoardShift')); if(savedShift) shiftSettings = savedShift; } catch(e) {}
             updateShiftUI();
 
-            teamsContact = localStorage.getItem('focusBoardTeamsContact') || "";
-            if (document.getElementById('teams-contact')) document.getElementById('teams-contact').value = teamsContact;
+            teamsUsername = localStorage.getItem('focusBoardTeamsUser') || "";
+            if(document.getElementById('teams-username')) document.getElementById('teams-username').value = teamsUsername;
 
             try {
                 const savedTimer = JSON.parse(localStorage.getItem('focusBoardTimerDurations'));
@@ -867,6 +884,7 @@
                 const savedSounds = JSON.parse(localStorage.getItem('focusBoardSounds'));
                 if(savedSounds) {
                     selectedAmbientUrl = savedSounds.ambient || "https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg";
+                    selectedAlarmUrl = savedSounds.alarm || "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
                     soundVolume = savedSounds.volume !== undefined ? savedSounds.volume : 0.5;
                     document.getElementById('ambient-choice').value = selectedAmbientUrl;
                     document.getElementById('volume-control').value = soundVolume; document.getElementById('volume-val').innerText = `${Math.round(soundVolume * 100)}%`;
@@ -1001,47 +1019,43 @@
             Object.keys(counts).forEach(k => { const e = document.getElementById(`count-${k}`); if(e) e.innerText = counts[k]; });
         }
 
-        function getReportText() {
+        async function generateReport() {
             const d = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             const fmt = (t) => `- ${t.text}${ (t.tags && t.tags.length > 0) ? ` (${t.tags.map(tg => tg.name).join(', ')})` : '' }`;
-            const comp = tasks.filter(x => x.status === 'completed');
-            const todo = tasks.filter(x => x.status === 'todo' || x.status === 'ongoing');
-            const pk = tasks.filter(x => x.status === 'parked');
-            
-            return `FocusBoard Scrum Report - ${d}\n\nCompleted Today:\n${comp.map(fmt).join('\n') || '- None'}\n\nRemaining Tasks:\n${todo.map(fmt).join('\n') || '- None'}\n\nParked / On Hold:\n${pk.map(fmt).join('\n') || '- None'}`;
-        }
+            const comp = tasks.filter(x => x.status === 'completed'); const todo = tasks.filter(x => x.status === 'todo' || x.status === 'ongoing'); const pk = tasks.filter(x => x.status === 'parked');
+            let txt = `*Scrum Report - ${d}*\n\n*Completed:*\n${comp.map(fmt).join('\n') || '- None'}\n\n*To do:*\n${todo.map(fmt).join('\n') || '- None'}\n\n*Parked:*\n${pk.map(fmt).join('\n') || '- None'}`;
 
-        async function handleReport() {
-            const reportText = getReportText();
             const { value: action } = await Swal.fire({
-                title: 'Scrum Report',
-                text: 'Select an option for your report:',
+                title: 'Share Scrum Report',
+                text: 'How would you like to export your report?',
                 icon: 'info',
                 showCancelButton: true,
                 confirmButtonText: 'Send to Teams',
                 cancelButtonText: 'Copy to Clipboard',
-                confirmButtonColor: '#464eb8', // Teams Blurple
-                footer: teamsContact ? `Sending to: <b>${teamsContact}</b>` : 'Configure Teams contact in Settings'
+                confirmButtonColor: '#464eb8',
+                reverseButtons: true,
+                footer: teamsUsername ? `Recipient: ${teamsUsername}` : 'Set Teams username in Settings'
             });
 
             if (action) {
-                if (!teamsContact) {
-                    showToast("No Teams contact configured");
+                if (!teamsUsername) {
+                    showToast("Please set Teams username in Settings");
                     toggleSettings();
                     return;
                 }
-                const encodedMsg = encodeURIComponent(reportText);
-                const teamsUrl = `https://teams.microsoft.com/l/chat/0/0?users=${teamsContact}&message=${encodedMsg}`;
+                // MS Teams Deep Link format
+                const encodedMsg = encodeURIComponent(txt);
+                const teamsUrl = `https://teams.microsoft.com/l/chat/0/0?users=${teamsUsername}&message=${encodedMsg}`;
                 window.open(teamsUrl, '_blank');
             } else if (Swal.getIcon() && !Swal.isVisible()) {
-                // User closed dialog or clicked copy (Cancel button in our case)
+                // If the user closed or clicked 'Cancel' (Clipboard)
                 const el = document.createElement('textarea');
-                el.value = reportText;
+                el.value = txt.replace(/\*/g, ''); // Remove markdown formatting for plain text clipboard
                 document.body.appendChild(el);
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-                showToast('Report Copied');
+                showToast('Report Copied to Clipboard');
             }
         }
 
@@ -1050,7 +1064,7 @@
             try { tasks = JSON.parse(localStorage.getItem('pomodoroKanbanTasks')) || []; } catch(e) { tasks = []; }
             try { globalTags = JSON.parse(localStorage.getItem('focusBoardGlobalTags')) || []; } catch(e) { globalTags = []; }
         }
-        function clearAllData() { Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed) { tasks=[]; saveData(); renderBoard(); showToast('Cleared All Data'); }}); }
+        function clearAllData() { Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed) { tasks=[]; saveData(); renderBoard(); showToast('Cleared'); }}); }
         function showToast(msg) { const t = document.getElementById('toast'); if (t) { document.getElementById('toast-msg').innerText = msg; t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500); } }
     </script>
 </body>
