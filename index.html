@@ -514,7 +514,7 @@
                     <div class="border-t border-gray-400/20 pt-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Microsoft Teams Integration</span>
                         <div class="px-1">
-                            <label class="text-[9px] opacity-60 block mb-1">Send Report To (Teams Username/Email)</label>
+                            <label class="text-[9px] opacity-60 block mb-1">Send Report To (Teams Email)</label>
                             <input type="text" id="teams-username" onchange="saveTeamsSettings()" placeholder="user@company.com" class="w-full glass-input px-3 py-1.5 text-xs focus:outline-none">
                         </div>
                     </div>
@@ -1145,7 +1145,7 @@
             const fmt = (t) => `- ${t.text}${ (t.tags && t.tags.length > 0) ? ` (${t.tags.map(tg => tg.name).join(', ')})` : '' }`;
             const comp = tasks.filter(x => x.status === 'completed'); const todo = tasks.filter(x => x.status === 'todo' || x.status === 'ongoing'); const pk = tasks.filter(x => x.status === 'parked');
             
-            const txt = `*Scrum Report - ${d}*\n\n*Completed:*\n${comp.map(fmt).join('\n') || '- None'}\n\n*To do:*\n${todo.map(fmt).join('\n') || '- None'}\n\n*Parked:*\n${pk.map(fmt).join('\n') || '- None'}`;
+            const txt = `Scrum Report - ${d}\n\nCompleted:\n${comp.map(fmt).join('\n') || '- None'}\n\nTo do:\n${todo.map(fmt).join('\n') || '- None'}\n\nParked:\n${pk.map(fmt).join('\n') || '- None'}`;
 
             const result = await Swal.fire({
                 title: 'Share Scrum Report',
