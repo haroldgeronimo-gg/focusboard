@@ -37,9 +37,7 @@
             }
         }
     </script>
-    <!-- Google Material Symbols Rounded -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
@@ -115,12 +113,36 @@
             border: 1px solid var(--glass-border);
             border-radius: 16px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
         .glass-card:hover {
             transform: translateY(-2px) scale(1.01);
             box-shadow: 0 10px 15px rgba(0,0,0,0.05);
             background: var(--highlight);
+        }
+
+        /* Dragging state — suppress hover lift */
+        .glass-card.dragging {
+            opacity: 0.4;
+            transform: none !important;
+            cursor: grabbing;
+        }
+
+        /* Drop placeholder */
+        .drop-placeholder {
+            height: 0;
+            border-radius: 12px;
+            background: var(--accent-color);
+            opacity: 0;
+            transition: height 0.18s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease, margin 0.18s ease;
+            pointer-events: none;
+            margin: 0;
+            overflow: hidden;
+        }
+        .drop-placeholder.visible {
+            height: 48px;
+            opacity: 0.25;
+            margin: 4px 0;
         }
 
         .tag-blue { border-left: 4px solid #007aff !important; background-color: rgba(0, 122, 255, 0.15) !important; }
@@ -177,7 +199,7 @@
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border-radius: 20px;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid var(--glass-border);
             box-shadow: 0 4px 20px rgba(0,0,0,0.02);
             height: 100%;
@@ -185,7 +207,10 @@
             flex-direction: column;
             min-height: 0;
         }
-        .column.drag-over { background: var(--highlight) !important; border-color: var(--accent-color) !important; }
+        .column.drag-over {
+            border-color: var(--accent-color) !important;
+            box-shadow: 0 0 0 2px rgba(0,122,255,0.15);
+        }
 
         .swal2-popup {
             background: var(--glass-bg) !important;
@@ -246,7 +271,7 @@
             justify-content: flex-start;
             height: 100%;
             gap: 1.5rem;
-            overflow: hidden; /* Constraint for internal scrolling */
+            overflow: hidden;
         }
 
         body.focus-active #left-panel-wrapper {
@@ -285,7 +310,7 @@
             display: flex;
             justify-content: center;
             flex: 1;
-            min-height: 0; /* Critical for inner scrolling */
+            min-height: 0;
             overflow: hidden;
         }
         
@@ -356,7 +381,6 @@
             font-weight: bold;
         }
 
-        /* Compressed Focus UI at Bottom */
         body.focus-active #left-panel-workday {
             width: 100%;
             max-width: 300px;
@@ -449,13 +473,16 @@
             cursor: pointer; margin-top: -4px;
         }
 
-        /* Level & XP Styles */
         .xp-bar { height: 4px; background: rgba(0,0,0,0.1); border-radius: 2px; overflow: hidden; width: 60px; }
         .xp-fill { height: 100%; background: var(--accent-color); transition: width 0.5s ease; }
         
-        /* Estimate Dots Styles */
         .estimate-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--text-main); opacity: 0.3; }
         .estimate-dot.filled { background: #ff453a; border-color: #ff453a; opacity: 1; }
+
+        /* Smooth task card animation when reordering */
+        .task-list .glass-card {
+            transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 sm:p-6">
@@ -485,12 +512,10 @@
                 <button onclick="toggleFocusMode()" class="glass-button w-9 h-9 flex items-center justify-center text-indigo-500 border-indigo-200 hover:bg-indigo-500 hover:text-white" title="Enter Focus Mode">
                     <span class="material-symbols-rounded">center_focus_strong</span>
                 </button>
-
                 <button onclick="toggleSettings()" class="glass-button w-9 h-9 flex items-center justify-center" title="Settings">
                     <span class="material-symbols-rounded">tune</span>
                 </button>
                 <div id="settings-menu" class="settings-popover absolute top-12 right-0 w-80 glass-panel p-4 z-50 flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[70vh]">
-                    <!-- Wallpaper -->
                     <div>
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Wallpaper</span>
                         <div class="grid grid-cols-4 gap-2">
@@ -509,8 +534,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Teams Setup -->
                     <div class="border-t border-gray-400/20 pt-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Microsoft Teams Integration</span>
                         <div class="px-1">
@@ -518,8 +541,6 @@
                             <input type="text" id="teams-username" onchange="saveTeamsSettings()" placeholder="user@company.com" class="w-full glass-input px-3 py-1.5 text-xs focus:outline-none">
                         </div>
                     </div>
-
-                    <!-- Work Shift -->
                     <div class="border-t border-gray-400/20 pt-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Work Shift</span>
                         <div class="flex gap-2 px-1 mb-3">
@@ -532,7 +553,6 @@
                                 <input type="time" id="shift-end" onchange="saveShiftSettings()" class="w-full glass-input px-2 py-1 text-xs focus:outline-none">
                             </div>
                         </div>
-                        
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Break Time</span>
                         <div class="flex gap-2 px-1">
                             <div class="flex-1">
@@ -545,8 +565,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Timer Intervals -->
                     <div class="border-t border-gray-400/20 pt-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Timer Intervals (min)</span>
                         <div class="grid grid-cols-3 gap-2 px-1">
@@ -564,8 +582,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Sound Options -->
                     <div class="border-t border-gray-400/20 pt-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Sound Options</span>
                         <div class="flex flex-col gap-3 px-1">
@@ -613,13 +629,10 @@
                         <button onclick="setTimerMode('longBreak')" id="btn-longBreak" class="glass-button flex-1 py-1 text-[10px] font-bold shadow-none border-none">Long</button>
                     </div>
                     <div id="timer-display" class="text-5xl font-extralight tracking-tight mb-2 tabular-nums">25:00</div>
-                    
-                    <!-- Streak Counter -->
                     <div id="streak-counter" class="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-4 flex items-center gap-1">
                         <span class="material-symbols-rounded text-sm">local_fire_department</span>
                         <span id="streak-val">0 Streak</span>
                     </div>
-
                     <div class="flex gap-3">
                         <button onclick="toggleTimer()" id="btn-toggle" class="w-10 h-10 rounded-full bg-[var(--text-main)] text-[var(--glass-bg)] flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shadow-lg">
                             <span id="icon-play" class="material-symbols-rounded text-2xl ml-0.5">play_arrow</span>
@@ -648,7 +661,6 @@
                             <span id="work-end-display">18:00</span>
                         </div>
                     </div>
-
                     <div class="ambient-inline-controls flex items-center gap-3 pt-2 border-t border-black/5 dark:border-white/5">
                         <button onclick="toggleAmbientSound()" id="ambient-play-btn" class="w-8 h-8 rounded-full glass-button flex items-center justify-center border-none shrink-0">
                             <span id="ambient-icon" class="material-symbols-rounded text-lg">play_arrow</span>
@@ -684,34 +696,10 @@
 
             <div id="right-panel-kanban" class="md:col-span-8 h-full min-h-0 transition-all duration-500">
                 <div id="kanban-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 h-full transition-all duration-500">
-                    <div id="col-wrapper-todo" class="column p-2" data-status="todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
-                            <span class="text-[10px] font-bold uppercase tracking-wider">To Do</span>
-                            <span id="count-todo" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
-                        </div>
-                        <div class="task-list flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
-                    </div>
-                    <div id="col-wrapper-ongoing" class="column p-2 border-indigo-200/30" data-status="ongoing" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
-                            <span class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> Focus</span>
-                            <span id="count-ongoing" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
-                        </div>
-                        <div class="task-list flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
-                    </div>
-                    <div id="col-wrapper-completed" class="column p-2" data-status="completed" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
-                            <span class="text-[10px] font-bold uppercase tracking-wider">Done</span>
-                            <span id="count-completed" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
-                        </div>
-                        <div class="task-list flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
-                    </div>
-                    <div id="col-wrapper-parked" class="column p-2" data-status="parked" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0">
-                            <span class="text-[10px] font-bold uppercase tracking-wider">Later</span>
-                            <span id="count-parked" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">0</span>
-                        </div>
-                        <div class="task-list flex-1 overflow-y-auto min-h-0 pr-1 space-y-2 pb-4"></div>
-                    </div>
+                    <div id="col-wrapper-todo" class="column p-2" data-status="todo"></div>
+                    <div id="col-wrapper-ongoing" class="column p-2 border-indigo-200/30" data-status="ongoing"></div>
+                    <div id="col-wrapper-completed" class="column p-2" data-status="completed"></div>
+                    <div id="col-wrapper-parked" class="column p-2" data-status="parked"></div>
                 </div>
             </div>
         </div>
@@ -726,7 +714,8 @@
     <audio id="ambient-sound" src="https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg" loop preload="auto"></audio>
 
     <script>
-        let noSleep = null;
+
+                let noSleep = null;
         let noSleepEnabled = false;
 
         function enableNoSleep() {
@@ -746,297 +735,343 @@
 
         document.addEventListener('click', enableNoSleep);
         document.addEventListener('touchstart', enableNoSleep);
-
+        // =====================================================================
+        //  STATE
+        // =====================================================================
         let tasks = [];
         let globalTags = [];
         let teamsUsername = "";
-        let userData = { xp: 0, level: 1, streak: 0 }; 
+        let userData = { xp: 0, level: 1, streak: 0 };
 
         let timer = { timeLeft: 25 * 60, originalTime: 25 * 60, isRunning: false, intervalId: null, mode: 'pomodoro', endTime: null };
         let MODES = { pomodoro: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
         let isFocusMode = false;
         let shiftSettings = { start: '09:00', end: '18:00', breakStart: '12:00', breakEnd: '13:00' };
         let selectedAmbientUrl = "https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg";
-        let selectedAlarmUrl = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
         let soundVolume = 0.5;
-        let draggedItem = null;
 
         const randomBackgrounds = [
-            "1493246507139-91e8fad9978e", "1506744038136-46273834b3fb", "1532274402911-5a369e4c4bb5",
-            "1470770841072-f978cf4d019e", "1499346030926-9a72daac6ea6", "1433069013004-7185f53201b1",
-            "1464822759023-fed622ff2c3b", "1500462918059-b1a0cb512f1d", "1519681393797-a1e9430e3b1f",
-            "1489549132488-d00b7eee80a1", "1494438639946-1ebd1d20bf85", "1557683316-973673baf926",
-            "1614850523459-c2f4c699c52e", "1618005182384-a83a8bd57fbe"
+            "1493246507139-91e8fad9978e","1506744038136-46273834b3fb","1532274402911-5a369e4c4bb5",
+            "1470770841072-f978cf4d019e","1499346030926-9a72daac6ea6","1433069013004-7185f53201b1",
+            "1464822759023-fed622ff2c3b","1500462918059-b1a0cb512f1d","1519681393797-a1e9430e3b1f",
+            "1489549132488-d00b7eee80a1","1494438639946-1ebd1d20bf85","1557683316-973673baf926",
+            "1614850523459-c2f4c699c52e","1618005182384-a83a8bd57fbe"
         ];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadData(); loadSettings(); renderBoard(); updateTimerDisplay(); updateGamificationUI();
-            updateWorkDay(); setInterval(updateWorkDay, 60000);
-            document.addEventListener('click', (e) => {
-                const menu = document.getElementById('settings-menu');
-                const btn = e.target.closest('button');
-                if (menu && !menu.contains(e.target) && (!btn || !btn.title.includes('Settings'))) menu.classList.remove('open');
+        // =====================================================================
+        //  DRAG & DROP — SORTABLE WITH PLACEHOLDER
+        // =====================================================================
+        let draggedTaskId = null;
+        let draggedEl = null;
+        let placeholder = null;
+        let currentDropTarget = null; // the .task-list we're hovering
+
+        function createPlaceholder() {
+            const ph = document.createElement('div');
+            ph.className = 'drop-placeholder';
+            ph.id = 'drop-placeholder';
+            return ph;
+        }
+
+        function removePlaceholder() {
+            const existing = document.getElementById('drop-placeholder');
+            if (existing) existing.remove();
+            placeholder = null;
+        }
+
+        // Find the task-card element at a given Y position inside a list
+        function getCardAfter(container, y) {
+            const cards = [...container.querySelectorAll('.glass-card:not(.dragging)')];
+            return cards.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, element: child };
+                }
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function onCardDragStart(e) {
+            draggedTaskId = this.dataset.taskId;
+            draggedEl = this;
+
+            // Must happen async so the browser captures the un-dimmed element
+            requestAnimationFrame(() => {
+                this.classList.add('dragging');
             });
-            if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
-        });
 
-        function updateGamificationUI() {
-            const level = Math.floor(Math.sqrt(userData.xp / 100)) + 1;
-            const xpInCurrentLevel = userData.xp - (Math.pow(level - 1, 2) * 100);
-            const xpNeededForNext = (Math.pow(level, 2) * 100) - (Math.pow(level - 1, 2) * 100);
-            const progress = (xpInCurrentLevel / xpNeededForNext) * 100;
-
-            if (level > userData.level) {
-                Swal.fire({ title: 'Level Up!', text: `You reached Level ${level}!`, icon: 'success', timer: 3000 });
-                userData.level = level;
-            }
-
-            document.getElementById('level-display').innerText = `Level ${level}`;
-            document.getElementById('xp-fill').style.width = `${progress}%`;
-            document.getElementById('streak-val').innerText = `${userData.streak} Streak`;
-            saveData();
+            placeholder = createPlaceholder();
+            e.dataTransfer.effectAllowed = 'move';
         }
 
-        function addXP(amount) {
-            userData.xp += amount;
-            showToast(`+${amount} XP`, 'stars');
-            updateGamificationUI();
-        }
-        
-        function updateWorkDay() {
-            const now = new Date();
-            const nowTime = now.getHours() * 60 + now.getMinutes();
-            const [startH, startM] = shiftSettings.start.split(':').map(Number);
-            const [endH, endM] = shiftSettings.end.split(':').map(Number);
-            const startTime = startH * 60 + startM;
-            const endTime = endH * 60 + endM;
-            const totalDuration = endTime - startTime;
-            
-            const clockEl = document.getElementById('clock-display');
-            if (clockEl) clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        function onCardDragEnd(e) {
+            if (draggedEl) draggedEl.classList.remove('dragging');
 
-            let percentage = 0; let text = ""; const bar = document.getElementById('work-progress-bar');
-            if (bar) {
-                bar.classList.remove('bg-yellow-400', 'bg-red-500', 'bg-[var(--accent-color)]');
-                const [bStartH, bStartM] = shiftSettings.breakStart.split(':').map(Number);
-                const [bEndH, bEndM] = shiftSettings.breakEnd.split(':').map(Number);
-                const breakStartTime = bStartH * 60 + bStartM;
-                const breakEndTime = bEndH * 60 + bEndM;
+            // Commit reorder if placeholder is placed somewhere
+            if (placeholder && placeholder.parentElement) {
+                const listEl = placeholder.parentElement;
+                const colEl = listEl.closest('[data-status]');
+                const newStatus = colEl ? colEl.getAttribute('data-status') : null;
+                const task = tasks.find(t => t.id === draggedTaskId);
 
-                if (totalDuration > 0) {
-                    const breakStartPct = Math.max(0, ((breakStartTime - startTime) / totalDuration) * 100);
-                    const breakEndPct = Math.min(100, ((breakEndTime - startTime) / totalDuration) * 100);
-                    const marker = document.getElementById('lunch-marker');
-                    if (marker) {
-                        if (breakEndPct - breakStartPct > 0) {
-                            marker.style.left = `${breakStartPct}%`; marker.style.width = `${breakEndPct - breakStartPct}%`;
-                            marker.style.display = 'block';
-                        } else marker.style.display = 'none';
+                if (task && newStatus) {
+                    const oldStatus = task.status;
+
+                    // Figure out new index from placeholder position
+                    const cards = [...listEl.querySelectorAll('.glass-card')];
+                    const phIndex = [...listEl.children].indexOf(placeholder);
+                    
+                    // Remove from old position
+                    tasks = tasks.filter(t => t.id !== draggedTaskId);
+
+                    // Find insertion index among tasks in the target column
+                    const colTasks = tasks.filter(t => t.status === newStatus);
+                    // How many cards (of same status) are before the placeholder?
+                    let insertBefore = null;
+                    const siblings = [...listEl.children];
+                    for (let i = 0; i < siblings.length; i++) {
+                        if (siblings[i] === placeholder) {
+                            // find the next card after placeholder
+                            for (let j = i + 1; j < siblings.length; j++) {
+                                const tid = siblings[j].dataset && siblings[j].dataset.taskId;
+                                if (tid) { insertBefore = tid; break; }
+                            }
+                            break;
+                        }
                     }
-                }
 
-                if (nowTime < startTime) {
-                    percentage = 0; text = `Starts in ${Math.floor((startTime - nowTime) / 60)}h ${(startTime - nowTime) % 60}m`;
-                    bar.classList.add('bg-[var(--accent-color)]');
-                } else if (nowTime > endTime) {
-                    percentage = 100; text = `+ ${Math.floor((nowTime - endTime) / 60)}h ${(nowTime - endTime) % 60}m Overtime`;
-                    bar.classList.add('bg-red-500');
-                } else {
-                    percentage = Math.min(100, Math.max(0, ((nowTime - startTime) / totalDuration) * 100));
-                    if (nowTime >= breakStartTime && nowTime < breakEndTime) { text = "Lunch Break 🍱"; bar.classList.add('bg-yellow-400'); }
-                    else { text = `${Math.floor((endTime - nowTime) / 60)}h ${(endTime - nowTime) % 60}m left`; bar.classList.add('bg-[var(--accent-color)]'); }
+                    // Assign new status
+                    task.status = newStatus;
+                    if (oldStatus !== newStatus && newStatus === 'completed') addXP(50);
+
+                    // Re-insert into tasks array at correct global position
+                    if (insertBefore) {
+                        const idx = tasks.findIndex(t => t.id === insertBefore);
+                        tasks.splice(idx, 0, task);
+                    } else {
+                        // Append after last task of that status
+                        const lastIdx = tasks.reduce((acc, t, i) => t.status === newStatus ? i : acc, -1);
+                        tasks.splice(lastIdx + 1, 0, task);
+                    }
+
+                    saveData();
                 }
-                bar.style.width = `${percentage}%`;
-                const remainingEl = document.getElementById('work-remaining');
-                if (remainingEl) remainingEl.innerText = text;
             }
+
+            removePlaceholder();
+            draggedTaskId = null;
+            draggedEl = null;
+            currentDropTarget = null;
+
+            // Remove drag-over from all columns
+            document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+
+            renderBoard();
         }
 
-        function toggleSettings() { const menu = document.getElementById('settings-menu'); if (menu) menu.classList.toggle('open'); }
+        function onListDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
 
-        function setBackground(type, isInitialLoad = false) {
-            if (type === 'default') document.body.style.background = 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)';
-            else if (type === 'nature') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2560')";
-            else if (type === 'abstract') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2560')";
-            else if (type === 'minimal') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=2560')";
-            document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center';
-            localStorage.setItem('focusBoardBgType', type); if (!isInitialLoad) toggleSettings();
-        }
+            const list = this; // .task-list
+            const col = list.closest('.column');
+            if (col) col.classList.add('drag-over');
 
-        function setRandomBackground() {
-            const photoId = randomBackgrounds[Math.floor(Math.random() * randomBackgrounds.length)];
-            const url = `https://images.unsplash.com/photo-${photoId}?q=80&w=2560&auto=format&fit=crop`;
-            document.body.style.backgroundImage = `url('${url}')`;
-            document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center';
-            localStorage.setItem('focusBoardBgType', 'custom'); localStorage.setItem('focusBoardBgCustom', url); 
-        }
-
-        function handleBgUpload(e) {
-            const file = e.target.files[0]; if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (evt) => { document.body.style.backgroundImage = `url(${evt.target.result})`; localStorage.setItem('focusBoardBgType', 'custom'); localStorage.setItem('focusBoardBgCustom', evt.target.result); };
-            reader.readAsDataURL(file); toggleSettings();
-        }
-
-        function saveShiftSettings() {
-            const start = document.getElementById('shift-start').value;
-            const end = document.getElementById('shift-end').value;
-            const bS = document.getElementById('break-start').value;
-            const bE = document.getElementById('break-end').value;
-            if(start && end && bS && bE) {
-                shiftSettings = { start, end, breakStart: bS, breakEnd: bE };
-                localStorage.setItem('focusBoardShift', JSON.stringify(shiftSettings));
-                updateShiftUI(); updateWorkDay();
+            if (!placeholder) {
+                placeholder = createPlaceholder();
             }
-        }
 
-        function saveTimerSettings() {
-            const focus = parseInt(document.getElementById('time-focus').value) || 25;
-            const short = parseInt(document.getElementById('time-short').value) || 5;
-            const long = parseInt(document.getElementById('time-long').value) || 15;
-            localStorage.setItem('focusBoardTimerDurations', JSON.stringify({ focus, short, long }));
-            MODES.pomodoro = focus * 60; MODES.shortBreak = short * 60; MODES.longBreak = long * 60;
-            if (!timer.isRunning) { timer.originalTime = MODES[timer.mode]; timer.timeLeft = MODES[timer.mode]; updateTimerDisplay(); }
-        }
+            const afterEl = getCardAfter(list, e.clientY);
 
-        function saveTeamsSettings() {
-            teamsUsername = document.getElementById('teams-username').value.trim();
-            localStorage.setItem('focusBoardTeamsUser', teamsUsername);
-        }
-
-        function updateShiftUI() {
-            const ids = ['shift-start','shift-end','break-start','break-end'];
-            const vals = [shiftSettings.start, shiftSettings.end, shiftSettings.breakStart, shiftSettings.breakEnd];
-            ids.forEach((id, i) => { if(document.getElementById(id)) document.getElementById(id).value = vals[i]; });
-            if(document.getElementById('work-start-display')) document.getElementById('work-start-display').innerText = shiftSettings.start;
-            if(document.getElementById('work-end-display')) document.getElementById('work-end-display').innerText = shiftSettings.end;
-        }
-
-        function loadSettings() {
-            loadTheme();
-            const type = localStorage.getItem('focusBoardBgType') || 'default';
-            if(type === 'custom') {
-                const bg = localStorage.getItem('focusBoardBgCustom');
-                if(bg) { document.body.style.backgroundImage = bg.startsWith('data:') ? `url(${bg})` : `url('${bg}')`; document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center'; }
-            } else setBackground(type, true);
-
-            try { const savedShift = JSON.parse(localStorage.getItem('focusBoardShift')); if(savedShift) shiftSettings = savedShift; } catch(e) {}
-            updateShiftUI();
-
-            teamsUsername = localStorage.getItem('focusBoardTeamsUser') || "";
-            if(document.getElementById('teams-username')) document.getElementById('teams-username').value = teamsUsername;
-
-            try {
-                const savedTimer = JSON.parse(localStorage.getItem('focusBoardTimerDurations'));
-                if(savedTimer) {
-                    MODES.pomodoro = savedTimer.focus * 60; MODES.shortBreak = savedTimer.short * 60; MODES.longBreak = savedTimer.long * 60;
-                    document.getElementById('time-focus').value = savedTimer.focus; document.getElementById('time-short').value = savedTimer.short; document.getElementById('time-long').value = savedTimer.long;
+            if (afterEl == null) {
+                // Append at end
+                if (placeholder.parentElement !== list || list.lastElementChild !== placeholder) {
+                    list.appendChild(placeholder);
                 }
-                if(!timer.isRunning) { timer.originalTime = MODES[timer.mode]; timer.timeLeft = MODES[timer.mode]; updateTimerDisplay(); }
-            } catch(e) {}
-
-            try {
-                const savedSounds = JSON.parse(localStorage.getItem('focusBoardSounds'));
-                if(savedSounds) {
-                    selectedAmbientUrl = savedSounds.ambient || "https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg";
-                    selectedAlarmUrl = savedSounds.alarm || "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
-                    soundVolume = savedSounds.volume !== undefined ? savedSounds.volume : 0.5;
-                    document.getElementById('ambient-choice').value = selectedAmbientUrl;
-                    document.getElementById('volume-control').value = soundVolume; document.getElementById('volume-val').innerText = `${Math.round(soundVolume * 100)}%`;
-                }
-                const ambient = document.getElementById('ambient-sound'); if (ambient) { ambient.src = selectedAmbientUrl; ambient.volume = soundVolume; }
-            } catch(e) {}
-        }
-
-        function setAmbientVolume(val) {
-            soundVolume = parseFloat(val); const audio = document.getElementById('ambient-sound');
-            if (audio) audio.volume = soundVolume;
-            const vv = document.getElementById('volume-val'); if(vv) vv.innerText = `${Math.round(soundVolume * 100)}%`;
-            saveSoundSettings();
-        }
-
-        async function toggleAmbientSound() {
-            const audio = document.getElementById('ambient-sound'); const icon = document.getElementById('ambient-icon');
-            if (!audio.src || audio.src === window.location.href) { audio.src = selectedAmbientUrl; audio.load(); }
-            try {
-                if (audio.paused) { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); }
-                else { audio.pause(); icon.innerText = "play_arrow"; document.getElementById('ambient-play-btn').classList.remove('active-mode'); }
-            } catch (err) { console.error(err); }
-        }
-
-        async function previewAmbient() {
-            const audio = document.getElementById('ambient-sound'); const icon = document.getElementById('preview-ambient-icon');
-            const selected = document.getElementById('ambient-choice').value;
-            if (!audio.paused && audio.src === selected) { audio.pause(); icon.innerText = "play_arrow"; }
-            else { audio.src = selected; audio.load(); try { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-icon').innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); } catch(e) {} }
-        }
-
-        function updateAmbientChoice() {
-            selectedAmbientUrl = document.getElementById('ambient-choice').value; const audio = document.getElementById('ambient-sound');
-            if (audio) { const wasPlaying = !audio.paused; audio.src = selectedAmbientUrl; audio.load(); if (wasPlaying) audio.play(); }
-            saveSoundSettings();
-        }
-
-        function saveSoundSettings() { localStorage.setItem('focusBoardSounds', JSON.stringify({ ambient: selectedAmbientUrl, volume: soundVolume })); }
-
-        function setTimerMode(m) { 
-            stopTimer(); timer.mode = m; timer.timeLeft = MODES[m]; timer.originalTime = MODES[m]; 
-            document.querySelectorAll('#btn-pomodoro, #btn-shortBreak, #btn-longBreak').forEach(b => b.classList.remove('active-mode'));
-            const btn = document.getElementById(`btn-${m}`); if (btn) btn.classList.add('active-mode');
-            updateTimerDisplay();
-        }
-        function toggleTimer() { timer.isRunning ? stopTimer() : startTimer(); }
-        function startTimer() { 
-            if(timer.isRunning) return; timer.isRunning = true; timer.endTime = Date.now() + timer.timeLeft * 1000;
-            const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'pause'; 
-            timer.intervalId = setInterval(() => {
-                const diff = Math.ceil((timer.endTime - Date.now()) / 1000);
-                if(diff >= 0) { timer.timeLeft = diff; updateTimerDisplay(); } else { completeTimer(); }
-            }, 1000);
-        }
-        function stopTimer() { timer.isRunning = false; clearInterval(timer.intervalId); const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'play_arrow'; document.title = "FocusBoard"; }
-        function resetTimer() { 
-            stopTimer(); 
-            if (timer.mode === 'pomodoro') userData.streak = 0; 
-            timer.timeLeft = timer.originalTime; 
-            updateTimerDisplay(); 
-            updateGamificationUI();
-        }
-        function updateTimerDisplay() {
-            const m = Math.floor(timer.timeLeft / 60).toString().padStart(2,'0'); const s = (timer.timeLeft % 60).toString().padStart(2,'0');
-            const d = document.getElementById('timer-display'); if (d) d.innerText = `${m}:${s}`;
-            if(timer.isRunning) document.title = `(${m}:${s}) FocusBoard`;
-        }
-        function completeTimer() { 
-            stopTimer(); const a = document.getElementById('alarm-sound'); if(a) a.play().catch(()=>{}); 
-            
-            if (timer.mode === 'pomodoro') {
-                userData.streak++;
-                addXP(25 + (userData.streak * 5)); 
-                
-                tasks.filter(t => t.status === 'ongoing').forEach(t => {
-                    t.completedPomos = (t.completedPomos || 0) + 1;
-                });
-                renderBoard();
-                showToast("Focus Finished!"); 
             } else {
-                showToast("Break Finished!", "energy_savings_leaf");
+                if (placeholder.nextSibling !== afterEl) {
+                    list.insertBefore(placeholder, afterEl);
+                }
             }
-            
-            if ("Notification" in window && Notification.permission === "granted") new Notification("FocusBoard", { body: timer.mode === 'pomodoro' ? "Focus Session Complete!" : "Break Over!" });
-            
-            timer.timeLeft = timer.originalTime; 
-            updateTimerDisplay(); 
-            updateGamificationUI();
+
+            // Trigger visible class on next frame for CSS transition
+            requestAnimationFrame(() => {
+                if (placeholder) placeholder.classList.add('visible');
+            });
         }
 
-        function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('focusBoardTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }
-        function loadTheme() { if(localStorage.getItem('focusBoardTheme') === 'dark') document.documentElement.classList.add('dark'); }
+        function onListDragLeave(e) {
+            // Only remove drag-over if truly leaving the column
+            const col = this.closest('.column');
+            if (col && !col.contains(e.relatedTarget)) {
+                col.classList.remove('drag-over');
+            }
+        }
 
-        // --- Kanban Logic ---
+        function onListDrop(e) {
+            e.preventDefault();
+            // The actual reorder happens in onCardDragEnd
+            const col = this.closest('.column');
+            if (col) col.classList.remove('drag-over');
+        }
+
+        // =====================================================================
+        //  RENDER BOARD
+        // =====================================================================
+        function renderBoard() {
+            const colDefs = [
+                { id: 'todo',      label: 'To Do',  icon: null,       accent: null },
+                { id: 'ongoing',   label: 'Focus',  icon: '●',        accent: 'indigo' },
+                { id: 'completed', label: 'Done',   icon: null,       accent: null },
+                { id: 'parked',    label: 'Later',  icon: null,       accent: null },
+            ];
+
+            colDefs.forEach(({ id, label, icon, accent }) => {
+                const colEl = document.getElementById(`col-wrapper-${id}`);
+                if (!colEl) return;
+                colEl.innerHTML = '';
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0';
+                const colTasks = tasks.filter(t => t.status === id);
+                header.innerHTML = `
+                    <span class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                        ${id === 'ongoing' ? '<span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>' : ''}
+                        ${label}
+                    </span>
+                    <span id="count-${id}" class="text-[9px] font-bold bg-black/10 px-1.5 py-0.5 rounded">${colTasks.length}</span>
+                `;
+                colEl.appendChild(header);
+
+                // Task list (scrollable)
+                const list = document.createElement('div');
+                list.className = 'task-list flex-1 overflow-y-auto min-h-0 pr-1 pb-4';
+                list.style.display = 'flex';
+                list.style.flexDirection = 'column';
+                list.style.gap = '8px';
+
+                // Wire up drag events on the list itself (for empty-column drops)
+                list.addEventListener('dragover', onListDragOver);
+                list.addEventListener('dragleave', onListDragLeave);
+                list.addEventListener('drop', onListDrop);
+
+                // Render tasks
+                colTasks.forEach(task => {
+                    const card = buildCard(task, id);
+                    list.appendChild(card);
+                });
+
+                colEl.appendChild(list);
+            });
+        }
+
+        function buildCard(task, status) {
+            const isOngoing = status === 'ongoing';
+            const tagClass = (task.tags && task.tags.length > 0) ? `tag-${task.tags[0].color}` : "";
+
+            const card = document.createElement('div');
+            card.className = `glass-card p-3 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''} ${tagClass}`;
+            card.draggable = true;
+            card.dataset.taskId = task.id;
+            // Keep old id for edit compat
+            card.id = task.id;
+
+            // Dots
+            const estimate = task.estimate || 1;
+            const completed = task.completedPomos || 0;
+            let dotsHtml = '<div class="flex gap-1 mt-2">';
+            for (let i = 0; i < estimate; i++) {
+                dotsHtml += `<div class="estimate-dot ${i < completed ? 'filled' : ''}"></div>`;
+            }
+            dotsHtml += '</div>';
+
+            // Tags
+            const tagsHtml = (task.tags && task.tags.length > 0)
+                ? `<div class="flex flex-wrap gap-1 mt-2">${task.tags.map((tg, i) =>
+                    `<span onclick="removeTag('${task.id}', ${i})" class="text-[8px] opacity-90 font-bold px-2 py-0.5 rounded-full bg-${tg.color}-500/20 text-${tg.color}-500 border border-${tg.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">${tg.name}</span>`
+                  ).join('')}</div>`
+                : '';
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    ${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">` : ''}
+                    <div class="flex-1">
+                        <p class="task-text task-text-content text-xs font-semibold leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')">${task.text}</p>
+                        ${dotsHtml}
+                    </div>
+                    <div class="task-action-btn flex gap-1 opacity-40 hover:opacity-100 transition-opacity shrink-0">
+                        <button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors">
+                            <span class="material-symbols-rounded text-sm">label</span>
+                        </button>
+                        <button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors">
+                            <span class="material-symbols-rounded text-sm">close</span>
+                        </button>
+                    </div>
+                </div>
+                ${tagsHtml}
+            `;
+
+            card.addEventListener('dragstart', onCardDragStart);
+            card.addEventListener('dragend', onCardDragEnd);
+
+            return card;
+        }
+
+        // =====================================================================
+        //  TASK OPERATIONS
+        // =====================================================================
+        function addTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('task-input');
+            const est = parseInt(document.getElementById('task-estimate').value) || 1;
+            const text = input.value.trim();
+            if (text) {
+                tasks.push({ id: Date.now().toString(), text, status: 'todo', tags: [], estimate: est, completedPomos: 0 });
+                saveData(); renderBoard(); input.value = '';
+                showToast('Task Added');
+            }
+        }
+
+        function deleteTask(id) {
+            Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', width: 300 })
+                .then(res => { if (res.isConfirmed) { tasks = tasks.filter(t => t.id !== id); saveData(); renderBoard(); } });
+        }
+
+        function removeTag(taskId, idx) {
+            const t = tasks.find(x => x.id === taskId);
+            if (t && t.tags) { t.tags.splice(idx, 1); saveData(); renderBoard(); }
+        }
+
+        function enableEdit(id) {
+            const cardEl = document.getElementById(id);
+            if (!cardEl) return;
+            const p = cardEl.querySelector('p.task-text-content');
+            const input = document.createElement('input');
+            input.value = p.innerText;
+            input.className = 'w-full bg-transparent border-b border-[var(--text-main)] outline-none text-sm';
+            input.onblur = () => {
+                if (input.value.trim()) { tasks.find(t => t.id === id).text = input.value.trim(); saveData(); renderBoard(); }
+                else renderBoard();
+            };
+            input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
+            p.replaceWith(input); input.focus();
+        }
+
+        function completeTaskFromFocus(id) {
+            const t = tasks.find(x => x.id === id);
+            if (t) { t.status = 'completed'; addXP(50); saveData(); showToast('Done!'); renderBoard(); }
+        }
+
+        // =====================================================================
+        //  TAG PICKER
+        // =====================================================================
         function getLibraryHtml() {
             if (globalTags.length === 0) return '<p class="text-[10px] opacity-40 italic">No saved tags</p>';
-            return globalTags.map(tag => `<div class="swal-tag-pill bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30" data-name="${tag.name}" data-color="${tag.color}"><span>${tag.name}</span><span class="swal-tag-delete material-symbols-rounded text-[10px]" data-delete="${tag.name}">close</span></div>`).join('');
+            return globalTags.map(tag =>
+                `<div class="swal-tag-pill bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30" data-name="${tag.name}" data-color="${tag.color}"><span>${tag.name}</span><span class="swal-tag-delete material-symbols-rounded text-[10px]" data-delete="${tag.name}">close</span></div>`
+            ).join('');
         }
 
         async function openTagPicker(taskId) {
@@ -1049,167 +1084,287 @@
                     const btns = Swal.getPopup().querySelectorAll('.swal-color-btn'); let selectedColor = 'blue';
                     const selectColor = (c) => { btns.forEach(b => b.style.transform = 'scale(1)'); const btn = Array.from(btns).find(b => b.getAttribute('data-color') === c); if(btn) btn.style.transform = 'scale(1.25)'; selectedColor = c; };
                     btns.forEach(btn => btn.onclick = () => selectColor(btn.getAttribute('data-color')));
-                    const lib = document.getElementById('swal-tag-library'); if (lib) { lib.onclick = (e) => { const delBtn = e.target.closest('[data-delete]'); if (delBtn) { e.stopPropagation(); const tagName = delBtn.getAttribute('data-delete'); globalTags = globalTags.filter(t => t.name !== tagName); localStorage.setItem('focusBoardGlobalTags', JSON.stringify(globalTags)); lib.innerHTML = getLibraryHtml(); return; } const pill = e.target.closest('.swal-tag-pill'); if (pill) { const name = pill.getAttribute('data-name'); const color = pill.getAttribute('data-color'); if (!task.tags) task.tags = []; task.tags.push({ name: name, color: color }); saveData(); renderBoard(); showToast('Tag Added'); Swal.close(); } }; }
+                    const lib = document.getElementById('swal-tag-library');
+                    if (lib) {
+                        lib.onclick = (e) => {
+                            const delBtn = e.target.closest('[data-delete]');
+                            if (delBtn) { e.stopPropagation(); const tagName = delBtn.getAttribute('data-delete'); globalTags = globalTags.filter(t => t.name !== tagName); localStorage.setItem('focusBoardGlobalTags', JSON.stringify(globalTags)); lib.innerHTML = getLibraryHtml(); return; }
+                            const pill = e.target.closest('.swal-tag-pill');
+                            if (pill) { const name = pill.getAttribute('data-name'); const color = pill.getAttribute('data-color'); if (!task.tags) task.tags = []; task.tags.push({ name, color }); saveData(); renderBoard(); showToast('Tag Added'); Swal.close(); }
+                        };
+                    }
                     Swal.getPopup().selectedColor = () => selectedColor;
                 },
-                preConfirm: () => { const t = document.getElementById('swal-input-tag').value.trim(); if (!t) { Swal.showValidationMessage('Tag name required'); return false; } return { tagName: t, color: Swal.getPopup().selectedColor() }; }
+                preConfirm: () => {
+                    const t = document.getElementById('swal-input-tag').value.trim();
+                    if (!t) { Swal.showValidationMessage('Tag name required'); return false; }
+                    return { tagName: t, color: Swal.getPopup().selectedColor() };
+                }
             });
             if (formValues) {
-                if (!task.tags) task.tags = []; task.tags.push({ name: formValues.tagName, color: formValues.color });
-                if (!globalTags.find(t => t.name.toLowerCase() === formValues.tagName.toLowerCase())) { globalTags.push({ name: formValues.tagName, color: formValues.color }); localStorage.setItem('focusBoardGlobalTags', JSON.stringify(globalTags)); }
+                if (!task.tags) task.tags = [];
+                task.tags.push({ name: formValues.tagName, color: formValues.color });
+                if (!globalTags.find(t => t.name.toLowerCase() === formValues.tagName.toLowerCase())) {
+                    globalTags.push({ name: formValues.tagName, color: formValues.color });
+                    localStorage.setItem('focusBoardGlobalTags', JSON.stringify(globalTags));
+                }
                 saveData(); renderBoard(); showToast('Tag Added');
             }
         }
 
-        function addTask(e) { 
-            e.preventDefault(); 
-            const i = document.getElementById('task-input'); 
-            const est = parseInt(document.getElementById('task-estimate').value) || 1;
-            const t = i.value.trim(); 
-            if (t) { 
-                tasks.push({ 
-                    id: Date.now().toString(), 
-                    text: t, 
-                    status: 'todo', 
-                    tags: [], 
-                    estimate: est, 
-                    completedPomos: 0 
-                }); 
-                saveData(); renderBoard(); i.value = ''; showToast('Task Added'); 
-            } 
+        // =====================================================================
+        //  TIMER
+        // =====================================================================
+        function setTimerMode(m) {
+            stopTimer(); timer.mode = m; timer.timeLeft = MODES[m]; timer.originalTime = MODES[m];
+            document.querySelectorAll('#btn-pomodoro, #btn-shortBreak, #btn-longBreak').forEach(b => b.classList.remove('active-mode'));
+            const btn = document.getElementById(`btn-${m}`); if (btn) btn.classList.add('active-mode');
+            updateTimerDisplay();
         }
-        function deleteTask(id) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', width: 300 }).then((res) => { if(res.isConfirmed) { tasks = tasks.filter(t => t.id !== id); saveData(); renderBoard(); } }); }
-        function removeTag(taskId, idx) { const t = tasks.find(x => x.id === taskId); if (t && t.tags) { t.tags.splice(idx, 1); saveData(); renderBoard(); } }
-        function enableEdit(id) {
-            const p = document.getElementById(id).querySelector('p.task-text-content'); const input = document.createElement('input'); input.value = p.innerText; input.className = 'w-full bg-transparent border-b border-[var(--text-main)] outline-none text-sm';
-            input.onblur = () => { if(input.value.trim()) { tasks.find(t=>t.id===id).text = input.value.trim(); saveData(); renderBoard(); } else renderBoard(); };
-            input.onkeydown = (e) => { if(e.key === 'Enter') input.blur(); };
-            p.replaceWith(input); input.focus();
+        function toggleTimer() { timer.isRunning ? stopTimer() : startTimer(); }
+        function startTimer() {
+            if (timer.isRunning) return; timer.isRunning = true; timer.endTime = Date.now() + timer.timeLeft * 1000;
+            const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'pause';
+            timer.intervalId = setInterval(() => {
+                const diff = Math.ceil((timer.endTime - Date.now()) / 1000);
+                if (diff >= 0) { timer.timeLeft = diff; updateTimerDisplay(); } else { completeTimer(); }
+            }, 1000);
         }
-        function dragStart(e) { draggedItem = this; setTimeout(() => this.classList.add('opacity-50'), 0); }
-        function dragEnd() { this.classList.remove('opacity-50'); draggedItem = null; }
-        function allowDrop(e) { e.preventDefault(); }
-        function dragEnter(e) { e.preventDefault(); const c = e.target.closest('.column'); if(c) c.classList.add('drag-over'); }
-        function dragLeave(e) { const c = e.target.closest('.column'); if(c) c.classList.remove('drag-over'); }
-        function drop(e) { 
-            e.preventDefault(); 
-            const c = e.target.closest('[data-status]'); 
-            if(c) c.classList.remove('drag-over'); 
-            if(c && draggedItem) { 
-                const task = tasks.find(t => t.id === draggedItem.id);
-                const oldStatus = task.status;
-                const newStatus = c.getAttribute('data-status');
-                
-                if (oldStatus !== newStatus) {
-                    task.status = newStatus;
-                    if (newStatus === 'completed') {
-                        addXP(50);
+        function stopTimer() { timer.isRunning = false; clearInterval(timer.intervalId); const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'play_arrow'; document.title = "FocusBoard"; }
+        function resetTimer() {
+            stopTimer();
+            if (timer.mode === 'pomodoro') userData.streak = 0;
+            timer.timeLeft = timer.originalTime;
+            updateTimerDisplay();
+            updateGamificationUI();
+        }
+        function updateTimerDisplay() {
+            const m = Math.floor(timer.timeLeft / 60).toString().padStart(2,'0');
+            const s = (timer.timeLeft % 60).toString().padStart(2,'0');
+            const d = document.getElementById('timer-display'); if (d) d.innerText = `${m}:${s}`;
+            if (timer.isRunning) document.title = `(${m}:${s}) FocusBoard`;
+        }
+        function completeTimer() {
+            stopTimer(); const a = document.getElementById('alarm-sound'); if(a) a.play().catch(()=>{});
+            if (timer.mode === 'pomodoro') {
+                userData.streak++;
+                addXP(25 + (userData.streak * 5));
+                tasks.filter(t => t.status === 'ongoing').forEach(t => { t.completedPomos = (t.completedPomos || 0) + 1; });
+                renderBoard(); showToast("Focus Finished!");
+            } else {
+                showToast("Break Finished!", "energy_savings_leaf");
+            }
+            if ("Notification" in window && Notification.permission === "granted") new Notification("FocusBoard", { body: timer.mode === 'pomodoro' ? "Focus Session Complete!" : "Break Over!" });
+            timer.timeLeft = timer.originalTime; updateTimerDisplay(); updateGamificationUI();
+        }
+
+        // =====================================================================
+        //  GAMIFICATION
+        // =====================================================================
+        function updateGamificationUI() {
+            const level = Math.floor(Math.sqrt(userData.xp / 100)) + 1;
+            const xpInCurrentLevel = userData.xp - (Math.pow(level - 1, 2) * 100);
+            const xpNeededForNext = (Math.pow(level, 2) * 100) - (Math.pow(level - 1, 2) * 100);
+            const progress = (xpInCurrentLevel / xpNeededForNext) * 100;
+            if (level > userData.level) {
+                Swal.fire({ title: 'Level Up!', text: `You reached Level ${level}!`, icon: 'success', timer: 3000 });
+                userData.level = level;
+            }
+            document.getElementById('level-display').innerText = `Level ${level}`;
+            document.getElementById('xp-fill').style.width = `${progress}%`;
+            document.getElementById('streak-val').innerText = `${userData.streak} Streak`;
+            saveData();
+        }
+        function addXP(amount) { userData.xp += amount; showToast(`+${amount} XP`, 'stars'); updateGamificationUI(); }
+
+        // =====================================================================
+        //  WORK DAY
+        // =====================================================================
+        function updateWorkDay() {
+            const now = new Date();
+            const nowTime = now.getHours() * 60 + now.getMinutes();
+            const [startH, startM] = shiftSettings.start.split(':').map(Number);
+            const [endH, endM] = shiftSettings.end.split(':').map(Number);
+            const startTime = startH * 60 + startM;
+            const endTime = endH * 60 + endM;
+            const totalDuration = endTime - startTime;
+            const clockEl = document.getElementById('clock-display');
+            if (clockEl) clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            let percentage = 0; let text = ""; const bar = document.getElementById('work-progress-bar');
+            if (bar) {
+                bar.classList.remove('bg-yellow-400', 'bg-red-500', 'bg-[var(--accent-color)]');
+                const [bStartH, bStartM] = shiftSettings.breakStart.split(':').map(Number);
+                const [bEndH, bEndM] = shiftSettings.breakEnd.split(':').map(Number);
+                const breakStartTime = bStartH * 60 + bStartM;
+                const breakEndTime = bEndH * 60 + bEndM;
+                if (totalDuration > 0) {
+                    const breakStartPct = Math.max(0, ((breakStartTime - startTime) / totalDuration) * 100);
+                    const breakEndPct = Math.min(100, ((breakEndTime - startTime) / totalDuration) * 100);
+                    const marker = document.getElementById('lunch-marker');
+                    if (marker) {
+                        if (breakEndPct - breakStartPct > 0) { marker.style.left = `${breakStartPct}%`; marker.style.width = `${breakEndPct - breakStartPct}%`; marker.style.display = 'block'; }
+                        else marker.style.display = 'none';
                     }
-                    saveData(); renderBoard(); 
                 }
-            } 
+                if (nowTime < startTime) { percentage = 0; text = `Starts in ${Math.floor((startTime - nowTime) / 60)}h ${(startTime - nowTime) % 60}m`; bar.classList.add('bg-[var(--accent-color)]'); }
+                else if (nowTime > endTime) { percentage = 100; text = `+ ${Math.floor((nowTime - endTime) / 60)}h ${(nowTime - endTime) % 60}m Overtime`; bar.classList.add('bg-red-500'); }
+                else {
+                    percentage = Math.min(100, Math.max(0, ((nowTime - startTime) / totalDuration) * 100));
+                    const [bs2H, bs2M] = shiftSettings.breakStart.split(':').map(Number);
+                    const [be2H, be2M] = shiftSettings.breakEnd.split(':').map(Number);
+                    const bsTime = bs2H * 60 + bs2M; const beTime = be2H * 60 + be2M;
+                    if (nowTime >= bsTime && nowTime < beTime) { text = "Lunch Break 🍱"; bar.classList.add('bg-yellow-400'); }
+                    else { text = `${Math.floor((endTime - nowTime) / 60)}h ${(endTime - nowTime) % 60}m left`; bar.classList.add('bg-[var(--accent-color)]'); }
+                }
+                bar.style.width = `${percentage}%`;
+                const remainingEl = document.getElementById('work-remaining');
+                if (remainingEl) remainingEl.innerText = text;
+            }
         }
 
+        // =====================================================================
+        //  SETTINGS & THEME
+        // =====================================================================
+        function toggleSettings() { const menu = document.getElementById('settings-menu'); if (menu) menu.classList.toggle('open'); }
+        function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('focusBoardTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }
+        function loadTheme() { if (localStorage.getItem('focusBoardTheme') === 'dark') document.documentElement.classList.add('dark'); }
+
+        function setBackground(type, isInitialLoad = false) {
+            if (type === 'default') document.body.style.background = 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)';
+            else if (type === 'nature') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2560')";
+            else if (type === 'abstract') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2560')";
+            else if (type === 'minimal') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=2560')";
+            document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center';
+            localStorage.setItem('focusBoardBgType', type); if (!isInitialLoad) toggleSettings();
+        }
+        function setRandomBackground() {
+            const photoId = randomBackgrounds[Math.floor(Math.random() * randomBackgrounds.length)];
+            const url = `https://images.unsplash.com/photo-${photoId}?q=80&w=2560&auto=format&fit=crop`;
+            document.body.style.backgroundImage = `url('${url}')`; document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center';
+            localStorage.setItem('focusBoardBgType', 'custom'); localStorage.setItem('focusBoardBgCustom', url);
+        }
+        function handleBgUpload(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => { document.body.style.backgroundImage = `url(${evt.target.result})`; localStorage.setItem('focusBoardBgType', 'custom'); localStorage.setItem('focusBoardBgCustom', evt.target.result); };
+            reader.readAsDataURL(file); toggleSettings();
+        }
+        function saveShiftSettings() {
+            const start = document.getElementById('shift-start').value, end = document.getElementById('shift-end').value;
+            const bS = document.getElementById('break-start').value, bE = document.getElementById('break-end').value;
+            if (start && end && bS && bE) { shiftSettings = { start, end, breakStart: bS, breakEnd: bE }; localStorage.setItem('focusBoardShift', JSON.stringify(shiftSettings)); updateShiftUI(); updateWorkDay(); }
+        }
+        function saveTimerSettings() {
+            const focus = parseInt(document.getElementById('time-focus').value) || 25;
+            const short = parseInt(document.getElementById('time-short').value) || 5;
+            const long = parseInt(document.getElementById('time-long').value) || 15;
+            localStorage.setItem('focusBoardTimerDurations', JSON.stringify({ focus, short, long }));
+            MODES.pomodoro = focus * 60; MODES.shortBreak = short * 60; MODES.longBreak = long * 60;
+            if (!timer.isRunning) { timer.originalTime = MODES[timer.mode]; timer.timeLeft = MODES[timer.mode]; updateTimerDisplay(); }
+        }
+        function saveTeamsSettings() { teamsUsername = document.getElementById('teams-username').value.trim(); localStorage.setItem('focusBoardTeamsUser', teamsUsername); }
+        function updateShiftUI() {
+            const ids = ['shift-start','shift-end','break-start','break-end'];
+            const vals = [shiftSettings.start, shiftSettings.end, shiftSettings.breakStart, shiftSettings.breakEnd];
+            ids.forEach((id, i) => { if (document.getElementById(id)) document.getElementById(id).value = vals[i]; });
+            if (document.getElementById('work-start-display')) document.getElementById('work-start-display').innerText = shiftSettings.start;
+            if (document.getElementById('work-end-display')) document.getElementById('work-end-display').innerText = shiftSettings.end;
+        }
+
+        function setAmbientVolume(val) {
+            soundVolume = parseFloat(val); const audio = document.getElementById('ambient-sound');
+            if (audio) audio.volume = soundVolume;
+            const vv = document.getElementById('volume-val'); if (vv) vv.innerText = `${Math.round(soundVolume * 100)}%`;
+            saveSoundSettings();
+        }
+        async function toggleAmbientSound() {
+            const audio = document.getElementById('ambient-sound'); const icon = document.getElementById('ambient-icon');
+            if (!audio.src || audio.src === window.location.href) { audio.src = selectedAmbientUrl; audio.load(); }
+            try {
+                if (audio.paused) { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); }
+                else { audio.pause(); icon.innerText = "play_arrow"; document.getElementById('ambient-play-btn').classList.remove('active-mode'); }
+            } catch (err) { console.error(err); }
+        }
+        async function previewAmbient() {
+            const audio = document.getElementById('ambient-sound'); const icon = document.getElementById('preview-ambient-icon');
+            const selected = document.getElementById('ambient-choice').value;
+            if (!audio.paused && audio.src === selected) { audio.pause(); icon.innerText = "play_arrow"; }
+            else { audio.src = selected; audio.load(); try { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-icon').innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); } catch(e) {} }
+        }
+        function updateAmbientChoice() {
+            selectedAmbientUrl = document.getElementById('ambient-choice').value; const audio = document.getElementById('ambient-sound');
+            if (audio) { const wasPlaying = !audio.paused; audio.src = selectedAmbientUrl; audio.load(); if (wasPlaying) audio.play(); }
+            saveSoundSettings();
+        }
+        function saveSoundSettings() { localStorage.setItem('focusBoardSounds', JSON.stringify({ ambient: selectedAmbientUrl, volume: soundVolume })); }
+
+        function loadSettings() {
+            loadTheme();
+            const type = localStorage.getItem('focusBoardBgType') || 'default';
+            if (type === 'custom') { const bg = localStorage.getItem('focusBoardBgCustom'); if (bg) { document.body.style.backgroundImage = bg.startsWith('data:') ? `url(${bg})` : `url('${bg}')`; document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center'; } }
+            else setBackground(type, true);
+            try { const savedShift = JSON.parse(localStorage.getItem('focusBoardShift')); if (savedShift) shiftSettings = savedShift; } catch(e) {}
+            updateShiftUI();
+            teamsUsername = localStorage.getItem('focusBoardTeamsUser') || "";
+            if (document.getElementById('teams-username')) document.getElementById('teams-username').value = teamsUsername;
+            try {
+                const savedTimer = JSON.parse(localStorage.getItem('focusBoardTimerDurations'));
+                if (savedTimer) { MODES.pomodoro = savedTimer.focus * 60; MODES.shortBreak = savedTimer.short * 60; MODES.longBreak = savedTimer.long * 60; document.getElementById('time-focus').value = savedTimer.focus; document.getElementById('time-short').value = savedTimer.short; document.getElementById('time-long').value = savedTimer.long; }
+                if (!timer.isRunning) { timer.originalTime = MODES[timer.mode]; timer.timeLeft = MODES[timer.mode]; updateTimerDisplay(); }
+            } catch(e) {}
+            try {
+                const savedSounds = JSON.parse(localStorage.getItem('focusBoardSounds'));
+                if (savedSounds) { selectedAmbientUrl = savedSounds.ambient || selectedAmbientUrl; soundVolume = savedSounds.volume !== undefined ? savedSounds.volume : 0.5; document.getElementById('ambient-choice').value = selectedAmbientUrl; document.getElementById('volume-control').value = soundVolume; document.getElementById('volume-val').innerText = `${Math.round(soundVolume * 100)}%`; }
+                const ambient = document.getElementById('ambient-sound'); if (ambient) { ambient.src = selectedAmbientUrl; ambient.volume = soundVolume; }
+            } catch(e) {}
+        }
+
+        // =====================================================================
+        //  REPORT & MISC
+        // =====================================================================
         function toggleFocusMode() { isFocusMode = !isFocusMode; document.body.classList.toggle('focus-active'); showToast(isFocusMode ? 'Focus Active' : 'Focus Exited'); renderBoard(); }
-        function completeTaskFromFocus(id) { const t = tasks.find(x => x.id === id); if (t) { t.status = 'completed'; addXP(50); saveData(); showToast('Done!'); renderBoard(); } }
-
-        function renderBoard() {
-            const cols = { todo: document.querySelector('#col-wrapper-todo .task-list'), ongoing: document.querySelector('#col-wrapper-ongoing .task-list'), completed: document.querySelector('#col-wrapper-completed .task-list'), parked: document.querySelector('#col-wrapper-parked .task-list') };
-            Object.values(cols).forEach(c => { if(c) c.innerHTML = ''; });
-            const counts = { todo: 0, ongoing: 0, completed: 0, parked: 0 };
-            tasks.forEach(task => {
-                const el = document.createElement('div'); const isOngoing = task.status === 'ongoing';
-                let cc = (task.tags && task.tags.length > 0) ? `tag-${task.tags[0].color}` : "";
-                el.className = `glass-card p-3 mb-2 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''} ${cc}`;
-                el.draggable = true; el.id = task.id;
-                
-                let dotsHtml = '<div class="flex gap-1 mt-2">';
-                const estimate = task.estimate || 1;
-                const completed = task.completedPomos || 0;
-                for(let i=0; i < estimate; i++) {
-                    const filled = i < completed ? 'filled' : '';
-                    dotsHtml += `<div class="estimate-dot ${filled}"></div>`;
-                }
-                dotsHtml += '</div>';
-
-                let th = (task.tags && task.tags.length > 0) ? `<div class="flex flex-wrap gap-1 mt-2">${task.tags.map((tg, i) => `<span onclick="removeTag('${task.id}', ${i})" class="text-[8px] opacity-90 font-bold px-2 py-0.5 rounded-full bg-${tg.color}-500/20 text-${tg.color}-500 border border-${tg.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">${tg.name}</span>`).join('')}</div>` : "";
-                el.innerHTML = `<div class="flex items-center justify-between w-full">${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">` : ''}<div class="flex-1"><p class="task-text task-text-content text-xs font-semibold leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')">${task.text}</p>${dotsHtml}</div><div class="task-action-btn flex gap-1 opacity-40 hover:opacity-100 transition-opacity shrink-0"><button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">label</span></button><button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors"><span class="material-symbols-rounded text-sm">close</span></button></div></div>${th}`;
-                el.addEventListener('dragstart', dragStart); el.addEventListener('dragend', dragEnd);
-                if(cols[task.status]) { cols[task.status].appendChild(el); counts[task.status]++; }
-            });
-            Object.keys(counts).forEach(k => { const e = document.getElementById(`count-${k}`); if(e) e.innerText = counts[k]; });
-        }
 
         async function generateReport() {
             const d = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            const fmt = (t) => `- ${t.text}${ (t.tags && t.tags.length > 0) ? ` (${t.tags.map(tg => tg.name).join(', ')})` : '' }`;
-            const comp = tasks.filter(x => x.status === 'completed'); const todo = tasks.filter(x => x.status === 'todo' || x.status === 'ongoing'); const pk = tasks.filter(x => x.status === 'parked');
-            
+            const fmt = (t) => `- ${t.text}${(t.tags && t.tags.length > 0) ? ` (${t.tags.map(tg => tg.name).join(', ')})` : ''}`;
+            const comp = tasks.filter(x => x.status === 'completed'), todo = tasks.filter(x => x.status === 'todo' || x.status === 'ongoing'), pk = tasks.filter(x => x.status === 'parked');
             const txt = `Scrum Report - ${d}\n\nCompleted:\n${comp.map(fmt).join('\n') || '- None'}\n\nTo do:\n${todo.map(fmt).join('\n') || '- None'}\n\nParked:\n${pk.map(fmt).join('\n') || '- None'}`;
-
-            const result = await Swal.fire({
-                title: 'Share Scrum Report',
-                text: 'How would you like to export your report?',
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Send to Teams',
-                cancelButtonText: 'Copy to Clipboard',
-                confirmButtonColor: '#464eb8',
-                reverseButtons: true,
-                footer: teamsUsername ? `Recipient: ${teamsUsername}` : 'Set Teams username in Settings'
-            });
-
+            const result = await Swal.fire({ title: 'Share Scrum Report', text: 'How would you like to export your report?', icon: 'info', showCancelButton: true, confirmButtonText: 'Send to Teams', cancelButtonText: 'Copy to Clipboard', confirmButtonColor: '#464eb8', reverseButtons: true, footer: teamsUsername ? `Recipient: ${teamsUsername}` : 'Set Teams username in Settings' });
             if (result.isConfirmed) {
-                if (!teamsUsername) {
-                    showToast("Please set Teams username in Settings");
-                    toggleSettings();
-                    return;
-                }
-                const encodedMsg = encodeURIComponent(txt);
-                const teamsUrl = `https://teams.microsoft.com/l/chat/0/0?users=${teamsUsername}&message=${encodedMsg}`;
-                window.open(teamsUrl, '_blank');
+                if (!teamsUsername) { showToast("Please set Teams username in Settings"); toggleSettings(); return; }
+                window.open(`https://teams.microsoft.com/l/chat/0/0?users=${teamsUsername}&message=${encodeURIComponent(txt)}`, '_blank');
             } else if (result.dismiss === Swal.DismissReason.cancel) {
-                // Clipboard Logic
-                const el = document.createElement('textarea');
-                el.value = txt.replace(/\*/g, ''); // Clear markdown markers for clipboard
-                el.style.position = 'fixed'; // Ensure it's not visible or affecting layout
-                el.style.left = '-9999px';
-                el.style.top = '0';
-                document.body.appendChild(el);
-                el.select();
-                try {
-                    const successful = document.execCommand('copy');
-                    if (successful) {
-                        showToast('Report Copied to Clipboard');
-                    } else {
-                        showToast('Copying failed', 'error');
-                    }
-                } catch (err) {
-                    showToast('Copy error', 'error');
-                }
+                const el = document.createElement('textarea'); el.value = txt.replace(/\*/g, ''); el.style.position = 'fixed'; el.style.left = '-9999px'; el.style.top = '0'; document.body.appendChild(el); el.select();
+                try { if (document.execCommand('copy')) showToast('Report Copied to Clipboard'); else showToast('Copying failed', 'error'); } catch(err) { showToast('Copy error', 'error'); }
                 document.body.removeChild(el);
             }
         }
 
-        function saveData() { 
-            localStorage.setItem('pomodoroKanbanTasks', JSON.stringify(tasks)); 
-            localStorage.setItem('focusBoardUser', JSON.stringify(userData));
-        }
-        function loadData() { 
+        function saveData() { localStorage.setItem('pomodoroKanbanTasks', JSON.stringify(tasks)); localStorage.setItem('focusBoardUser', JSON.stringify(userData)); }
+        function loadData() {
             try { tasks = JSON.parse(localStorage.getItem('pomodoroKanbanTasks')) || []; } catch(e) { tasks = []; }
             try { globalTags = JSON.parse(localStorage.getItem('focusBoardGlobalTags')) || []; } catch(e) { globalTags = []; }
             try { userData = JSON.parse(localStorage.getItem('focusBoardUser')) || { xp: 0, level: 1, streak: 0 }; } catch(e) { userData = { xp: 0, level: 1, streak: 0 }; }
         }
         function clearAllData() { Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed) { tasks=[]; userData = { xp: 0, level: 1, streak: 0 }; saveData(); renderBoard(); updateGamificationUI(); showToast('Cleared'); }}); }
-        function showToast(msg, icon = 'check_circle') { 
-            const t = document.getElementById('toast'); 
-            if (t) { 
-                document.getElementById('toast-msg').innerText = msg; 
-                document.getElementById('toast-icon').innerText = icon;
-                t.classList.remove('translate-y-32', 'opacity-0'); 
-                setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500); 
-            } 
+        function showToast(msg, icon = 'check_circle') {
+            const t = document.getElementById('toast');
+            if (t) { document.getElementById('toast-msg').innerText = msg; document.getElementById('toast-icon').innerText = icon; t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500); }
         }
+
+        // =====================================================================
+        //  INIT
+        // =====================================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData(); loadSettings(); renderBoard(); updateTimerDisplay(); updateGamificationUI();
+            updateWorkDay(); setInterval(updateWorkDay, 60000);
+            document.addEventListener('click', (e) => {
+                const menu = document.getElementById('settings-menu');
+                const btn = e.target.closest('button');
+                if (menu && !menu.contains(e.target) && (!btn || !btn.title.includes('Settings'))) menu.classList.remove('open');
+            });
+            if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
+        });
     </script>
 </body>
 </html>
