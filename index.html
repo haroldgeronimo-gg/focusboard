@@ -37,7 +37,7 @@
             }
         }
     </script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
@@ -66,10 +66,13 @@
             --button-bg: rgba(255, 255, 255, 0.1);
         }
 
-        .material-symbols-rounded {
-            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
-            font-size: 20px;
+        .lucide {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2;
             vertical-align: middle;
+            display: inline-block;
+            flex-shrink: 0;
         }
 
         body {
@@ -384,13 +387,13 @@
         }
         body.focus-active .focus-mode-checkbox:checked { background-color: var(--text-main); }
         body.focus-active .focus-mode-checkbox:checked::after {
-            content: 'done';
-            font-family: 'Material Symbols Rounded';
+            content: '✓';
+            font-family: system-ui, sans-serif;
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             color: var(--glass-bg);
-            font-size: 22px;
+            font-size: 18px;
             font-weight: bold;
         }
 
@@ -525,7 +528,7 @@
         <header id="main-header" class="flex justify-between items-center mb-4 shrink-0 z-10 transition-all duration-500 ease-in-out origin-top">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md shadow-sm">
-                    <span class="material-symbols-rounded text-2xl">timer</span>
+                    <i data-lucide="timer" class="lucide text-2xl"></i>
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight opacity-90 leading-tight">FocusBoard</h1>
@@ -543,21 +546,21 @@
                     <button id="btn-undo" onclick="undo()" disabled
                         class="glass-button w-9 h-9 flex items-center justify-center"
                         title="Undo (Ctrl+Z)">
-                        <span class="material-symbols-rounded" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">undo</span>
+                        <i data-lucide="undo-2" class="lucide"></i>
                     </button>
                     <button id="btn-redo" onclick="redo()" disabled
                         class="glass-button w-9 h-9 flex items-center justify-center"
                         title="Redo (Ctrl+Y / Ctrl+Shift+Z)">
-                        <span class="material-symbols-rounded" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">redo</span>
+                        <i data-lucide="redo-2" class="lucide"></i>
                     </button>
                     <span id="history-indicator"></span>
                 </div>
 
                 <button onclick="toggleFocusMode()" class="glass-button w-9 h-9 flex items-center justify-center text-indigo-500 border-indigo-200 hover:bg-indigo-500 hover:text-white" title="Enter Focus Mode">
-                    <span class="material-symbols-rounded">center_focus_strong</span>
+                    <i data-lucide="focus" class="lucide"></i>
                 </button>
                 <button onclick="toggleSettings()" class="glass-button w-9 h-9 flex items-center justify-center" title="Settings">
-                    <span class="material-symbols-rounded">tune</span>
+                    <i data-lucide="sliders-horizontal" class="lucide"></i>
                 </button>
                 <div id="settings-menu" class="settings-popover absolute top-12 right-0 w-80 glass-panel p-4 z-50 flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[70vh]">
                     <div>
@@ -570,11 +573,11 @@
                         </div>
                         <div class="flex gap-2 mt-2">
                             <label class="glass-button flex-1 py-2 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer">
-                                <span class="material-symbols-rounded text-base">upload_file</span> Upload
+                                <i data-lucide="image-up" class="lucide text-base"></i> Upload
                                 <input type="file" id="bg-upload" accept="image/*" class="hidden" onchange="handleBgUpload(event)">
                             </label>
                             <button onclick="setRandomBackground()" class="glass-button flex-1 py-2 text-xs font-bold flex items-center justify-center gap-2">
-                                <span class="material-symbols-rounded text-base">shuffle</span> Random
+                                <i data-lucide="shuffle" class="lucide text-base"></i> Random
                             </button>
                         </div>
                     </div>
@@ -644,21 +647,33 @@
                                     </select>
                                 </div>
                                 <button onclick="previewAmbient()" id="btn-preview-ambient" class="w-8 h-8 rounded-full glass-button flex items-center justify-center shrink-0" title="Preview Ambient">
-                                    <span id="preview-ambient-icon" class="material-symbols-rounded text-sm">play_arrow</span>
+                                    <i id="preview-ambient-icon" data-lucide="play" class="lucide text-sm"></i>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-400/20 pt-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Data</span>
+                        <div class="flex gap-2 px-1">
+                            <button onclick="exportCSV()" class="glass-button flex-1 py-2 text-xs font-bold flex items-center justify-center gap-2 text-emerald-500 hover:bg-emerald-500 hover:text-white border-emerald-200/50">
+                                <i data-lucide="download" class="lucide" style="width:14px;height:14px;"></i> Export CSV
+                            </button>
+                            <label class="glass-button flex-1 py-2 text-xs font-bold flex items-center justify-center gap-2 text-amber-500 hover:bg-amber-500 hover:text-white border-amber-200/50 cursor-pointer">
+                                <i data-lucide="upload" class="lucide" style="width:14px;height:14px;"></i> Import CSV
+                                <input type="file" id="csv-import-input" accept=".csv" class="hidden" onchange="importCSV(event)">
+                            </label>
                         </div>
                     </div>
                 </div>
 
                 <button onclick="toggleDarkMode()" class="glass-button w-9 h-9 flex items-center justify-center" title="Theme">
-                    <span id="theme-icon" class="material-symbols-rounded">dark_mode</span>
+                    <i id="theme-icon" data-lucide="moon" class="lucide"></i>
                 </button>
                 <button onclick="generateReport()" class="glass-button w-9 h-9 flex items-center justify-center" title="Report">
-                    <span class="material-symbols-rounded">description</span>
+                    <i data-lucide="file-text" class="lucide"></i>
                 </button>
                 <button onclick="clearAllData()" class="glass-button w-9 h-9 flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500 border-red-200" title="Clear">
-                    <span class="material-symbols-rounded">delete_sweep</span>
+                    <i data-lucide="trash-2" class="lucide"></i>
                 </button>
             </div>
         </header>
@@ -674,15 +689,15 @@
                     </div>
                     <div id="timer-display" class="text-5xl font-extralight tracking-tight mb-2 tabular-nums">25:00</div>
                     <div id="streak-counter" class="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-4 flex items-center gap-1">
-                        <span class="material-symbols-rounded text-sm">local_fire_department</span>
+                        <i data-lucide="flame" class="lucide text-sm"></i>
                         <span id="streak-val">0 Streak</span>
                     </div>
                     <div class="flex gap-3">
                         <button onclick="toggleTimer()" id="btn-toggle" class="w-10 h-10 rounded-full bg-[var(--text-main)] text-[var(--glass-bg)] flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shadow-lg">
-                            <span id="icon-play" class="material-symbols-rounded text-2xl ml-0.5">play_arrow</span>
+                            <i id="icon-play" data-lucide="play" class="lucide text-2xl ml-0.5" style="width:22px;height:22px;"></i>
                         </button>
                         <button onclick="resetTimer()" class="reset-btn-ui w-8 h-8 rounded-full glass-button flex items-center justify-center opacity-60 hover:opacity-100">
-                            <span class="material-symbols-rounded text-xl">restart_alt</span>
+                            <i data-lucide="rotate-ccw" class="lucide text-xl" style="width:20px;height:20px;"></i>
                         </button>
                     </div>
                 </div>
@@ -707,7 +722,7 @@
                     </div>
                     <div class="ambient-inline-controls flex items-center gap-3 pt-2 border-t border-black/5 dark:border-white/5">
                         <button onclick="toggleAmbientSound()" id="ambient-play-btn" class="w-8 h-8 rounded-full glass-button flex items-center justify-center border-none shrink-0">
-                            <span id="ambient-icon" class="material-symbols-rounded text-lg">play_arrow</span>
+                            <i id="ambient-icon" data-lucide="play" class="lucide text-lg" style="width:18px;height:18px;"></i>
                         </button>
                         <div class="flex flex-col flex-1 gap-1">
                             <div class="flex justify-between items-center px-0.5">
@@ -731,7 +746,7 @@
                                 <span class="text-[10px] opacity-40">Pomos</span>
                             </div>
                             <button type="submit" class="glass-button px-4 py-1.5 text-xs font-bold flex items-center gap-1 hover:bg-blue-500 hover:text-white">
-                                <span class="material-symbols-rounded text-sm">add</span> Add
+                                <i data-lucide="plus" class="lucide text-sm" style="width:14px;height:14px;"></i> Add
                             </button>
                         </div>
                     </form>
@@ -750,7 +765,7 @@
     </div>
 
     <div id="toast" class="glass-panel fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-32 opacity-0 transition-all duration-300 flex items-center gap-2 px-5 py-2.5 rounded-full z-50 text-sm font-medium shadow-2xl">
-        <span id="toast-icon" class="material-symbols-rounded text-green-500 text-lg">check_circle</span>
+        <i id="toast-icon" data-lucide="check-circle" class="lucide text-green-500 text-lg" style="width:18px;height:18px;"></i>
         <span id="toast-msg">Notification</span>
     </div>
 
@@ -1033,6 +1048,8 @@
                 colTasks.forEach(task => list.appendChild(buildCard(task, id)));
                 colEl.appendChild(list);
             });
+            // Re-render all lucide icons after board update
+            initLucide();
         }
 
         function buildCard(task, status) {
@@ -1066,10 +1083,10 @@
                     </div>
                     <div class="task-action-btn flex gap-1 opacity-40 hover:opacity-100 transition-opacity shrink-0">
                         <button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors">
-                            <span class="material-symbols-rounded text-sm">label</span>
+                            <i data-lucide="tag" class="lucide" style="width:14px;height:14px;"></i>
                         </button>
                         <button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors">
-                            <span class="material-symbols-rounded text-sm">close</span>
+                            <i data-lucide="x" class="lucide" style="width:14px;height:14px;"></i>
                         </button>
                     </div>
                 </div>
@@ -1153,7 +1170,7 @@
         function getLibraryHtml() {
             if (globalTags.length === 0) return '<p class="text-[10px] opacity-40 italic">No saved tags</p>';
             return globalTags.map(tag =>
-                `<div class="swal-tag-pill bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30" data-name="${tag.name}" data-color="${tag.color}"><span>${tag.name}</span><span class="swal-tag-delete material-symbols-rounded text-[10px]" data-delete="${tag.name}">close</span></div>`
+                `<div class="swal-tag-pill bg-${tag.color}-500/20 text-${tag.color}-500 border border-${tag.color}-500/30" data-name="${tag.name}" data-color="${tag.color}"><span>${tag.name}</span><span class="swal-tag-delete" data-delete="${tag.name}" style="display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>`
             ).join('');
         }
 
@@ -1214,13 +1231,13 @@
         function toggleTimer() { timer.isRunning ? stopTimer() : startTimer(); }
         function startTimer() {
             if (timer.isRunning) return; timer.isRunning = true; timer.endTime = Date.now() + timer.timeLeft * 1000;
-            const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'pause';
+            setLucideIcon('icon-play', 'pause');
             timer.intervalId = setInterval(() => {
                 const diff = Math.ceil((timer.endTime - Date.now()) / 1000);
                 if (diff >= 0) { timer.timeLeft = diff; updateTimerDisplay(); } else { completeTimer(); }
             }, 1000);
         }
-        function stopTimer() { timer.isRunning = false; clearInterval(timer.intervalId); const pi = document.getElementById('icon-play'); if (pi) pi.innerText = 'play_arrow'; document.title = "FocusBoard"; }
+        function stopTimer() { timer.isRunning = false; clearInterval(timer.intervalId); setLucideIcon('icon-play', 'play'); document.title = "FocusBoard"; }
         function resetTimer() {
             stopTimer();
             if (timer.mode === 'pomodoro') userData.streak = 0;
@@ -1316,8 +1333,17 @@
         //  SETTINGS & THEME
         // =====================================================================
         function toggleSettings() { const menu = document.getElementById('settings-menu'); if (menu) menu.classList.toggle('open'); }
-        function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('focusBoardTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }
-        function loadTheme() { if (localStorage.getItem('focusBoardTheme') === 'dark') document.documentElement.classList.add('dark'); }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('focusBoardTheme', isDark ? 'dark' : 'light');
+            setLucideIcon('theme-icon', isDark ? 'sun' : 'moon');
+        }
+        function loadTheme() {
+            if (localStorage.getItem('focusBoardTheme') === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        }
 
         function setBackground(type, isInitialLoad = false) {
             if (type === 'default') document.body.style.background = 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)';
@@ -1371,15 +1397,15 @@
             const audio = document.getElementById('ambient-sound'); const icon = document.getElementById('ambient-icon');
             if (!audio.src || audio.src === window.location.href) { audio.src = selectedAmbientUrl; audio.load(); }
             try {
-                if (audio.paused) { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); }
-                else { audio.pause(); icon.innerText = "play_arrow"; document.getElementById('ambient-play-btn').classList.remove('active-mode'); }
+                if (audio.paused) { await audio.play(); setLucideIcon('ambient-icon', 'pause'); document.getElementById('ambient-play-btn').classList.add('active-mode'); }
+                else { audio.pause(); setLucideIcon('ambient-icon', 'play'); document.getElementById('ambient-play-btn').classList.remove('active-mode'); }
             } catch (err) { console.error(err); }
         }
         async function previewAmbient() {
             const audio = document.getElementById('ambient-sound'); const icon = document.getElementById('preview-ambient-icon');
             const selected = document.getElementById('ambient-choice').value;
-            if (!audio.paused && audio.src === selected) { audio.pause(); icon.innerText = "play_arrow"; }
-            else { audio.src = selected; audio.load(); try { await audio.play(); icon.innerText = "pause"; document.getElementById('ambient-icon').innerText = "pause"; document.getElementById('ambient-play-btn').classList.add('active-mode'); } catch(e) {} }
+            if (!audio.paused && audio.src === selected) { audio.pause(); setLucideIcon('preview-ambient-icon', 'play'); }
+            else { audio.src = selected; audio.load(); try { await audio.play(); setLucideIcon('preview-ambient-icon', 'pause'); setLucideIcon('ambient-icon', 'pause'); document.getElementById('ambient-play-btn').classList.add('active-mode'); } catch(e) {} }
         }
         function updateAmbientChoice() {
             selectedAmbientUrl = document.getElementById('ambient-choice').value; const audio = document.getElementById('ambient-sound');
@@ -1407,6 +1433,132 @@
                 if (savedSounds) { selectedAmbientUrl = savedSounds.ambient || selectedAmbientUrl; soundVolume = savedSounds.volume !== undefined ? savedSounds.volume : 0.5; document.getElementById('ambient-choice').value = selectedAmbientUrl; document.getElementById('volume-control').value = soundVolume; document.getElementById('volume-val').innerText = `${Math.round(soundVolume * 100)}%`; }
                 const ambient = document.getElementById('ambient-sound'); if (ambient) { ambient.src = selectedAmbientUrl; ambient.volume = soundVolume; }
             } catch(e) {}
+        }
+
+        // =====================================================================
+        //  EXPORT / IMPORT CSV
+        // =====================================================================
+        function exportCSV() {
+            if (tasks.length === 0) { showToast('No tasks to export', 'info'); return; }
+
+            const headers = ['id', 'text', 'status', 'estimate', 'completedPomos', 'tags'];
+            const rows = tasks.map(t => {
+                const tagsStr = (t.tags && t.tags.length > 0)
+                    ? t.tags.map(tg => `${tg.name}:${tg.color}`).join('|')
+                    : '';
+                const safeText = `"${(t.text || '').replace(/"/g, '""')}"`;
+                return [t.id, safeText, t.status, t.estimate || 1, t.completedPomos || 0, `"${tagsStr}"`].join(',');
+            });
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const date = new Date().toISOString().slice(0, 10);
+            a.href = url; a.download = `focusboard-${date}.csv`;
+            document.body.appendChild(a); a.click();
+            document.body.removeChild(a); URL.revokeObjectURL(url);
+            showToast(`Exported ${tasks.length} tasks`, 'download');
+        }
+
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const lines = e.target.result.trim().split('\n');
+                    if (lines.length < 2) { showToast('CSV appears empty', 'error'); return; }
+
+                    const headerLine = lines[0].toLowerCase();
+                    const hasHeaders = headerLine.includes('text') && headerLine.includes('status');
+                    const dataLines = hasHeaders ? lines.slice(1) : lines;
+
+                    const parseCSVRow = (line) => {
+                        const result = [];
+                        let current = ''; let inQuotes = false;
+                        for (let i = 0; i < line.length; i++) {
+                            const ch = line[i];
+                            if (ch === '"') {
+                                if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+                                else inQuotes = !inQuotes;
+                            } else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
+                            else current += ch;
+                        }
+                        result.push(current);
+                        return result;
+                    };
+
+                    const validStatuses = ['todo', 'ongoing', 'completed', 'parked'];
+                    const imported = [];
+
+                    dataLines.forEach((line, idx) => {
+                        line = line.trim(); if (!line) return;
+                        const cols = parseCSVRow(line);
+
+                        let id, text, status, estimate, completedPomos, tagsRaw;
+
+                        if (hasHeaders) {
+                            // Structured: id, text, status, estimate, completedPomos, tags
+                            [id, text, status, estimate, completedPomos, tagsRaw] = cols;
+                        } else {
+                            // Loose format: at minimum just a text column
+                            text = cols[0]; status = cols[1] || 'todo'; estimate = cols[2];
+                        }
+
+                        text = (text || '').trim();
+                        if (!text) return;
+
+                        status = (status || 'todo').trim().toLowerCase();
+                        if (!validStatuses.includes(status)) status = 'todo';
+
+                        const tags = (tagsRaw || '').trim()
+                            ? tagsRaw.trim().split('|').map(s => {
+                                const [name, color] = s.split(':');
+                                return { name: name || s, color: color || 'blue' };
+                              }).filter(t => t.name)
+                            : [];
+
+                        imported.push({
+                            id: (id && id.trim() && !isNaN(id.trim())) ? id.trim() : `${Date.now()}${idx}`,
+                            text, status, tags,
+                            estimate: parseInt(estimate) || 1,
+                            completedPomos: parseInt(completedPomos) || 0
+                        });
+                    });
+
+                    if (imported.length === 0) { showToast('No valid rows found', 'error'); return; }
+
+                    Swal.fire({
+                        title: `Import ${imported.length} task${imported.length !== 1 ? 's' : ''}?`,
+                        html: `<div class="text-sm opacity-70">
+                            <p class="mb-3">Choose how to handle existing tasks:</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="import-mode" value="merge" checked> <span>Merge (add alongside existing)</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="import-mode" value="replace"> <span>Replace (clear existing first)</span></label>
+                            </div>
+                        </div>`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Import',
+                        width: 360,
+                    }).then(result => {
+                        if (!result.isConfirmed) return;
+                        const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'merge';
+                        pushHistory();
+                        if (mode === 'replace') tasks = imported;
+                        else tasks = [...tasks, ...imported];
+                        saveData(); renderBoard();
+                        showToast(`Imported ${imported.length} tasks`, 'check_circle');
+                    });
+                } catch (err) {
+                    console.error('CSV import error:', err);
+                    showToast('Failed to parse CSV', 'error');
+                }
+                // Reset input so the same file can be re-imported
+                event.target.value = '';
+            };
+            reader.readAsText(file);
         }
 
         // =====================================================================
@@ -1445,9 +1597,32 @@
                 }
             });
         }
-        function showToast(msg, icon = 'check_circle') {
+        // Lucide icon swap helper
+        function setLucideIcon(elId, iconName) {
+            if (typeof lucide === 'undefined') return;
+            const el = document.getElementById(elId);
+            if (!el) return;
+            el.setAttribute('data-lucide', iconName);
+            lucide.createIcons({ nodes: [el] });
+        }
+
+        function initLucide() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function showToast(msg, icon = 'check-circle') {
+            // Map old material icon names to lucide equivalents
+            const iconMap = { 'check_circle': 'check-circle', 'undo': 'undo-2', 'redo': 'redo-2', 'stars': 'star', 'energy_savings_leaf': 'leaf', 'download': 'download', 'error': 'alert-circle', 'info': 'info' };
+            const lucideIcon = iconMap[icon] || icon;
             const t = document.getElementById('toast');
-            if (t) { document.getElementById('toast-msg').innerText = msg; document.getElementById('toast-icon').innerText = icon; t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500); }
+            if (t) {
+                document.getElementById('toast-msg').innerText = msg;
+                const ti = document.getElementById('toast-icon');
+                ti.setAttribute('data-lucide', lucideIcon);
+                lucide.createIcons({ nodes: [ti] });
+                t.classList.remove('translate-y-32', 'opacity-0');
+                setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500);
+            }
         }
 
         // =====================================================================
@@ -1457,6 +1632,12 @@
             loadData(); loadSettings(); renderBoard(); updateTimerDisplay(); updateGamificationUI();
             updateWorkDay(); setInterval(updateWorkDay, 60000);
             updateUndoRedoUI(); // initialise button states
+            // Initialise all lucide icons (also fires on window load as fallback)
+            initLucide();
+            window.addEventListener('load', initLucide);
+            // Set correct theme icon on load
+            const isDark = document.documentElement.classList.contains('dark');
+            setLucideIcon('theme-icon', isDark ? 'sun' : 'moon');
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('settings-menu');
                 const btn = e.target.closest('button');
