@@ -121,14 +121,12 @@
             background: var(--highlight);
         }
 
-        /* Dragging state — suppress hover lift */
         .glass-card.dragging {
             opacity: 0.4;
             transform: none !important;
             cursor: grabbing;
         }
 
-        /* Drop placeholder */
         .drop-placeholder {
             height: 0;
             border-radius: 12px;
@@ -178,6 +176,21 @@
             border-color: transparent;
         }
         html.dark .glass-button.active-mode { color: #000; }
+
+        /* Undo/Redo disabled state */
+        .glass-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Undo/Redo flash animation */
+        @keyframes undoFlash {
+            0% { transform: scale(1); }
+            40% { transform: scale(0.85); }
+            100% { transform: scale(1); }
+        }
+        .undo-flash { animation: undoFlash 0.2s ease-out forwards; }
 
         .glass-input {
             background: var(--button-bg);
@@ -479,10 +492,25 @@
         .estimate-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--text-main); opacity: 0.3; }
         .estimate-dot.filled { background: #ff453a; border-color: #ff453a; opacity: 1; }
 
-        /* Smooth task card animation when reordering */
         .task-list .glass-card {
             transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
         }
+
+        /* Undo/Redo history indicator */
+        #history-indicator {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            font-weight: 700;
+            opacity: 0;
+            white-space: nowrap;
+            color: var(--text-muted);
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        #history-indicator.show { opacity: 1; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 sm:p-6">
@@ -509,6 +537,22 @@
             </div>
             
             <div class="flex gap-2 relative">
+
+                <!-- ── UNDO / REDO ── -->
+                <div class="flex gap-1 relative">
+                    <button id="btn-undo" onclick="undo()" disabled
+                        class="glass-button w-9 h-9 flex items-center justify-center"
+                        title="Undo (Ctrl+Z)">
+                        <span class="material-symbols-rounded" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">undo</span>
+                    </button>
+                    <button id="btn-redo" onclick="redo()" disabled
+                        class="glass-button w-9 h-9 flex items-center justify-center"
+                        title="Redo (Ctrl+Y / Ctrl+Shift+Z)">
+                        <span class="material-symbols-rounded" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">redo</span>
+                    </button>
+                    <span id="history-indicator"></span>
+                </div>
+
                 <button onclick="toggleFocusMode()" class="glass-button w-9 h-9 flex items-center justify-center text-indigo-500 border-indigo-200 hover:bg-indigo-500 hover:text-white" title="Enter Focus Mode">
                     <span class="material-symbols-rounded">center_focus_strong</span>
                 </button>
@@ -714,8 +758,7 @@
     <audio id="ambient-sound" src="https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg" loop preload="auto"></audio>
 
     <script>
-
-                let noSleep = null;
+        let noSleep = null;
         let noSleepEnabled = false;
 
         function enableNoSleep() {
@@ -736,9 +779,83 @@
         document.addEventListener('click', enableNoSleep);
         document.addEventListener('touchstart', enableNoSleep);
         // =====================================================================
+        //  UNDO / REDO — pure in-memory, never touches localStorage
+        // =====================================================================
+        const MAX_HISTORY = 50;          // cap to avoid unbounded RAM use
+        let history      = [];           // stack of JSON snapshots (past states)
+        let redoStack    = [];           // stack of JSON snapshots (future states)
+        let _suppressHistory = false;    // set true while applying undo/redo
+        let tasks        = [];           // declared here so undo/redo share the same reference
+
+        /** Call BEFORE mutating `tasks`. Records the current state. */
+        function pushHistory() {
+            if (_suppressHistory) return;
+            history.push(JSON.stringify(tasks));
+            if (history.length > MAX_HISTORY) history.shift();
+            redoStack = [];              // any new action wipes redo future
+            updateUndoRedoUI();
+        }
+
+        function undo() {
+            if (history.length === 0) return;
+            redoStack.push(JSON.stringify(tasks));
+            _suppressHistory = true;
+            tasks = JSON.parse(history.pop());
+            _suppressHistory = false;
+            saveData();
+            renderBoard();
+            updateUndoRedoUI();
+            showToast('Undo', 'undo');
+            flashBtn('btn-undo');
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+            history.push(JSON.stringify(tasks));
+            _suppressHistory = true;
+            tasks = JSON.parse(redoStack.pop());
+            _suppressHistory = false;
+            saveData();
+            renderBoard();
+            updateUndoRedoUI();
+            showToast('Redo', 'redo');
+            flashBtn('btn-redo');
+        }
+
+        function updateUndoRedoUI() {
+            const undoBtn = document.getElementById('btn-undo');
+            const redoBtn = document.getElementById('btn-redo');
+            const indicator = document.getElementById('history-indicator');
+            if (undoBtn) undoBtn.disabled = history.length === 0;
+            if (redoBtn) redoBtn.disabled = redoStack.length === 0;
+            if (indicator) {
+                indicator.textContent = `${history.length} / ${MAX_HISTORY}`;
+                indicator.classList.toggle('show', history.length > 0 || redoStack.length > 0);
+            }
+        }
+
+        function flashBtn(id) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.classList.add('undo-flash');
+            btn.addEventListener('animationend', () => btn.classList.remove('undo-flash'), { once: true });
+        }
+
+        // Keyboard shortcuts — Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z
+        document.addEventListener('keydown', (e) => {
+            const tag = document.activeElement && document.activeElement.tagName;
+            // Don't intercept while typing in an input/textarea
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+                else if ((e.key === 'y') || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
+            }
+        });
+
+        // =====================================================================
         //  STATE
         // =====================================================================
-        let tasks = [];
         let globalTags = [];
         let teamsUsername = "";
         let userData = { xp: 0, level: 1, streak: 0 };
@@ -764,7 +881,6 @@
         let draggedTaskId = null;
         let draggedEl = null;
         let placeholder = null;
-        let currentDropTarget = null; // the .task-list we're hovering
 
         function createPlaceholder() {
             const ph = document.createElement('div');
@@ -779,7 +895,6 @@
             placeholder = null;
         }
 
-        // Find the task-card element at a given Y position inside a list
         function getCardAfter(container, y) {
             const cards = [...container.querySelectorAll('.glass-card:not(.dragging)')];
             return cards.reduce((closest, child) => {
@@ -795,12 +910,7 @@
         function onCardDragStart(e) {
             draggedTaskId = this.dataset.taskId;
             draggedEl = this;
-
-            // Must happen async so the browser captures the un-dimmed element
-            requestAnimationFrame(() => {
-                this.classList.add('dragging');
-            });
-
+            requestAnimationFrame(() => { this.classList.add('dragging'); });
             placeholder = createPlaceholder();
             e.dataTransfer.effectAllowed = 'move';
         }
@@ -808,7 +918,6 @@
         function onCardDragEnd(e) {
             if (draggedEl) draggedEl.classList.remove('dragging');
 
-            // Commit reorder if placeholder is placed somewhere
             if (placeholder && placeholder.parentElement) {
                 const listEl = placeholder.parentElement;
                 const colEl = listEl.closest('[data-status]');
@@ -816,23 +925,16 @@
                 const task = tasks.find(t => t.id === draggedTaskId);
 
                 if (task && newStatus) {
-                    const oldStatus = task.status;
+                    // Snapshot BEFORE mutation
+                    pushHistory();
 
-                    // Figure out new index from placeholder position
-                    const cards = [...listEl.querySelectorAll('.glass-card')];
-                    const phIndex = [...listEl.children].indexOf(placeholder);
-                    
-                    // Remove from old position
+                    const oldStatus = task.status;
                     tasks = tasks.filter(t => t.id !== draggedTaskId);
 
-                    // Find insertion index among tasks in the target column
-                    const colTasks = tasks.filter(t => t.status === newStatus);
-                    // How many cards (of same status) are before the placeholder?
                     let insertBefore = null;
                     const siblings = [...listEl.children];
                     for (let i = 0; i < siblings.length; i++) {
                         if (siblings[i] === placeholder) {
-                            // find the next card after placeholder
                             for (let j = i + 1; j < siblings.length; j++) {
                                 const tid = siblings[j].dataset && siblings[j].dataset.taskId;
                                 if (tid) { insertBefore = tid; break; }
@@ -841,16 +943,13 @@
                         }
                     }
 
-                    // Assign new status
                     task.status = newStatus;
                     if (oldStatus !== newStatus && newStatus === 'completed') addXP(50);
 
-                    // Re-insert into tasks array at correct global position
                     if (insertBefore) {
                         const idx = tasks.findIndex(t => t.id === insertBefore);
                         tasks.splice(idx, 0, task);
                     } else {
-                        // Append after last task of that status
                         const lastIdx = tasks.reduce((acc, t, i) => t.status === newStatus ? i : acc, -1);
                         tasks.splice(lastIdx + 1, 0, task);
                     }
@@ -862,56 +961,33 @@
             removePlaceholder();
             draggedTaskId = null;
             draggedEl = null;
-            currentDropTarget = null;
-
-            // Remove drag-over from all columns
             document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
-
             renderBoard();
         }
 
         function onListDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-
-            const list = this; // .task-list
+            const list = this;
             const col = list.closest('.column');
             if (col) col.classList.add('drag-over');
-
-            if (!placeholder) {
-                placeholder = createPlaceholder();
-            }
-
+            if (!placeholder) placeholder = createPlaceholder();
             const afterEl = getCardAfter(list, e.clientY);
-
             if (afterEl == null) {
-                // Append at end
-                if (placeholder.parentElement !== list || list.lastElementChild !== placeholder) {
-                    list.appendChild(placeholder);
-                }
+                if (placeholder.parentElement !== list || list.lastElementChild !== placeholder) list.appendChild(placeholder);
             } else {
-                if (placeholder.nextSibling !== afterEl) {
-                    list.insertBefore(placeholder, afterEl);
-                }
+                if (placeholder.nextSibling !== afterEl) list.insertBefore(placeholder, afterEl);
             }
-
-            // Trigger visible class on next frame for CSS transition
-            requestAnimationFrame(() => {
-                if (placeholder) placeholder.classList.add('visible');
-            });
+            requestAnimationFrame(() => { if (placeholder) placeholder.classList.add('visible'); });
         }
 
         function onListDragLeave(e) {
-            // Only remove drag-over if truly leaving the column
             const col = this.closest('.column');
-            if (col && !col.contains(e.relatedTarget)) {
-                col.classList.remove('drag-over');
-            }
+            if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
         }
 
         function onListDrop(e) {
             e.preventDefault();
-            // The actual reorder happens in onCardDragEnd
             const col = this.closest('.column');
             if (col) col.classList.remove('drag-over');
         }
@@ -921,18 +997,17 @@
         // =====================================================================
         function renderBoard() {
             const colDefs = [
-                { id: 'todo',      label: 'To Do',  icon: null,       accent: null },
-                { id: 'ongoing',   label: 'Focus',  icon: '●',        accent: 'indigo' },
-                { id: 'completed', label: 'Done',   icon: null,       accent: null },
-                { id: 'parked',    label: 'Later',  icon: null,       accent: null },
+                { id: 'todo',      label: 'To Do',  icon: null,  accent: null },
+                { id: 'ongoing',   label: 'Focus',  icon: '●',   accent: 'indigo' },
+                { id: 'completed', label: 'Done',   icon: null,  accent: null },
+                { id: 'parked',    label: 'Later',  icon: null,  accent: null },
             ];
 
-            colDefs.forEach(({ id, label, icon, accent }) => {
+            colDefs.forEach(({ id, label }) => {
                 const colEl = document.getElementById(`col-wrapper-${id}`);
                 if (!colEl) return;
                 colEl.innerHTML = '';
 
-                // Header
                 const header = document.createElement('div');
                 header.className = 'flex items-center justify-between mb-2 px-1 opacity-60 column-header-info shrink-0';
                 const colTasks = tasks.filter(t => t.status === id);
@@ -945,24 +1020,17 @@
                 `;
                 colEl.appendChild(header);
 
-                // Task list (scrollable)
                 const list = document.createElement('div');
                 list.className = 'task-list flex-1 overflow-y-auto min-h-0 pr-1 pb-4';
                 list.style.display = 'flex';
                 list.style.flexDirection = 'column';
                 list.style.gap = '8px';
 
-                // Wire up drag events on the list itself (for empty-column drops)
                 list.addEventListener('dragover', onListDragOver);
                 list.addEventListener('dragleave', onListDragLeave);
                 list.addEventListener('drop', onListDrop);
 
-                // Render tasks
-                colTasks.forEach(task => {
-                    const card = buildCard(task, id);
-                    list.appendChild(card);
-                });
-
+                colTasks.forEach(task => list.appendChild(buildCard(task, id)));
                 colEl.appendChild(list);
             });
         }
@@ -975,19 +1043,14 @@
             card.className = `glass-card p-3 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''} ${tagClass}`;
             card.draggable = true;
             card.dataset.taskId = task.id;
-            // Keep old id for edit compat
             card.id = task.id;
 
-            // Dots
             const estimate = task.estimate || 1;
             const completed = task.completedPomos || 0;
             let dotsHtml = '<div class="flex gap-1 mt-2">';
-            for (let i = 0; i < estimate; i++) {
-                dotsHtml += `<div class="estimate-dot ${i < completed ? 'filled' : ''}"></div>`;
-            }
+            for (let i = 0; i < estimate; i++) dotsHtml += `<div class="estimate-dot ${i < completed ? 'filled' : ''}"></div>`;
             dotsHtml += '</div>';
 
-            // Tags
             const tagsHtml = (task.tags && task.tags.length > 0)
                 ? `<div class="flex flex-wrap gap-1 mt-2">${task.tags.map((tg, i) =>
                     `<span onclick="removeTag('${task.id}', ${i})" class="text-[8px] opacity-90 font-bold px-2 py-0.5 rounded-full bg-${tg.color}-500/20 text-${tg.color}-500 border border-${tg.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">${tg.name}</span>`
@@ -1015,12 +1078,11 @@
 
             card.addEventListener('dragstart', onCardDragStart);
             card.addEventListener('dragend', onCardDragEnd);
-
             return card;
         }
 
         // =====================================================================
-        //  TASK OPERATIONS
+        //  TASK OPERATIONS  (each calls pushHistory() before mutating tasks)
         // =====================================================================
         function addTask(e) {
             e.preventDefault();
@@ -1028,6 +1090,7 @@
             const est = parseInt(document.getElementById('task-estimate').value) || 1;
             const text = input.value.trim();
             if (text) {
+                pushHistory();
                 tasks.push({ id: Date.now().toString(), text, status: 'todo', tags: [], estimate: est, completedPomos: 0 });
                 saveData(); renderBoard(); input.value = '';
                 showToast('Task Added');
@@ -1036,32 +1099,52 @@
 
         function deleteTask(id) {
             Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', width: 300 })
-                .then(res => { if (res.isConfirmed) { tasks = tasks.filter(t => t.id !== id); saveData(); renderBoard(); } });
+                .then(res => {
+                    if (res.isConfirmed) {
+                        pushHistory();
+                        tasks = tasks.filter(t => t.id !== id);
+                        saveData(); renderBoard();
+                    }
+                });
         }
 
         function removeTag(taskId, idx) {
             const t = tasks.find(x => x.id === taskId);
-            if (t && t.tags) { t.tags.splice(idx, 1); saveData(); renderBoard(); }
+            if (t && t.tags) {
+                pushHistory();
+                t.tags.splice(idx, 1);
+                saveData(); renderBoard();
+            }
         }
 
         function enableEdit(id) {
             const cardEl = document.getElementById(id);
             if (!cardEl) return;
             const p = cardEl.querySelector('p.task-text-content');
+            const originalText = p.innerText;
             const input = document.createElement('input');
-            input.value = p.innerText;
+            input.value = originalText;
             input.className = 'w-full bg-transparent border-b border-[var(--text-main)] outline-none text-sm';
             input.onblur = () => {
-                if (input.value.trim()) { tasks.find(t => t.id === id).text = input.value.trim(); saveData(); renderBoard(); }
-                else renderBoard();
+                const newText = input.value.trim();
+                if (newText && newText !== originalText) {
+                    pushHistory();
+                    tasks.find(t => t.id === id).text = newText;
+                    saveData();
+                }
+                renderBoard();
             };
-            input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
+            input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { input.value = originalText; input.blur(); } };
             p.replaceWith(input); input.focus();
         }
 
         function completeTaskFromFocus(id) {
             const t = tasks.find(x => x.id === id);
-            if (t) { t.status = 'completed'; addXP(50); saveData(); showToast('Done!'); renderBoard(); }
+            if (t) {
+                pushHistory();
+                t.status = 'completed';
+                addXP(50); saveData(); showToast('Done!'); renderBoard();
+            }
         }
 
         // =====================================================================
@@ -1090,7 +1173,13 @@
                             const delBtn = e.target.closest('[data-delete]');
                             if (delBtn) { e.stopPropagation(); const tagName = delBtn.getAttribute('data-delete'); globalTags = globalTags.filter(t => t.name !== tagName); localStorage.setItem('focusBoardGlobalTags', JSON.stringify(globalTags)); lib.innerHTML = getLibraryHtml(); return; }
                             const pill = e.target.closest('.swal-tag-pill');
-                            if (pill) { const name = pill.getAttribute('data-name'); const color = pill.getAttribute('data-color'); if (!task.tags) task.tags = []; task.tags.push({ name, color }); saveData(); renderBoard(); showToast('Tag Added'); Swal.close(); }
+                            if (pill) {
+                                const name = pill.getAttribute('data-name'); const color = pill.getAttribute('data-color');
+                                pushHistory();
+                                if (!task.tags) task.tags = [];
+                                task.tags.push({ name, color });
+                                saveData(); renderBoard(); showToast('Tag Added'); Swal.close();
+                            }
                         };
                     }
                     Swal.getPopup().selectedColor = () => selectedColor;
@@ -1102,6 +1191,7 @@
                 }
             });
             if (formValues) {
+                pushHistory();
                 if (!task.tags) task.tags = [];
                 task.tags.push({ name: formValues.tagName, color: formValues.color });
                 if (!globalTags.find(t => t.name.toLowerCase() === formValues.tagName.toLowerCase())) {
@@ -1346,7 +1436,15 @@
             try { globalTags = JSON.parse(localStorage.getItem('focusBoardGlobalTags')) || []; } catch(e) { globalTags = []; }
             try { userData = JSON.parse(localStorage.getItem('focusBoardUser')) || { xp: 0, level: 1, streak: 0 }; } catch(e) { userData = { xp: 0, level: 1, streak: 0 }; }
         }
-        function clearAllData() { Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed) { tasks=[]; userData = { xp: 0, level: 1, streak: 0 }; saveData(); renderBoard(); updateGamificationUI(); showToast('Cleared'); }}); }
+        function clearAllData() {
+            Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{
+                if(r.isConfirmed) {
+                    pushHistory();
+                    tasks=[]; userData = { xp: 0, level: 1, streak: 0 };
+                    saveData(); renderBoard(); updateGamificationUI(); showToast('Cleared');
+                }
+            });
+        }
         function showToast(msg, icon = 'check_circle') {
             const t = document.getElementById('toast');
             if (t) { document.getElementById('toast-msg').innerText = msg; document.getElementById('toast-icon').innerText = icon; t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 2500); }
@@ -1358,6 +1456,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadData(); loadSettings(); renderBoard(); updateTimerDisplay(); updateGamificationUI();
             updateWorkDay(); setInterval(updateWorkDay, 60000);
+            updateUndoRedoUI(); // initialise button states
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('settings-menu');
                 const btn = e.target.closest('button');
