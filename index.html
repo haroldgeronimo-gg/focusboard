@@ -116,7 +116,7 @@
             border: 1px solid var(--glass-border);
             border-radius: 16px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s, transform 0.2s ease;
         }
         .glass-card:hover {
             transform: translateY(-2px) scale(1.01);
@@ -180,14 +180,12 @@
         }
         html.dark .glass-button.active-mode { color: #000; }
 
-        /* Undo/Redo disabled state */
         .glass-button:disabled {
             opacity: 0.3;
             cursor: not-allowed;
             pointer-events: none;
         }
 
-        /* Undo/Redo flash animation */
         @keyframes undoFlash {
             0% { transform: scale(1); }
             40% { transform: scale(0.85); }
@@ -215,7 +213,7 @@
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border-radius: 20px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid var(--glass-border);
             box-shadow: 0 4px 20px rgba(0,0,0,0.02);
             height: 100%;
@@ -252,7 +250,7 @@
         }
         .settings-popover.open { opacity: 1; pointer-events: auto; transform: scale(1); }
 
-        /* Focus Mode Styles */
+        /* Focus Mode Utility Transforms */
         body.focus-active #main-container {
             background: transparent !important;
             box-shadow: none !important;
@@ -499,7 +497,6 @@
             transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
         }
 
-        /* Undo/Redo history indicator */
         #history-indicator {
             position: absolute;
             bottom: -18px;
@@ -540,8 +537,6 @@
             </div>
             
             <div class="flex gap-2 relative">
-
-                <!-- ── UNDO / REDO ── -->
                 <div class="flex gap-1 relative">
                     <button id="btn-undo" onclick="undo()" disabled
                         class="glass-button w-9 h-9 flex items-center justify-center"
@@ -562,8 +557,19 @@
                 <button onclick="toggleSettings()" class="glass-button w-9 h-9 flex items-center justify-center" title="Settings">
                     <i data-lucide="sliders-horizontal" class="lucide"></i>
                 </button>
+                
                 <div id="settings-menu" class="settings-popover absolute top-12 right-0 w-80 glass-panel p-4 z-50 flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[70vh]">
                     <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Board Layout</span>
+                        <div class="grid grid-cols-2 gap-2 px-1">
+                            <button onclick="changeLayout('kanban')" id="layout-btn-kanban" class="glass-button py-2 text-xs font-medium active-mode">Kanban Grid</button>
+                            <button onclick="changeLayout('stack')" id="layout-btn-stack" class="glass-button py-2 text-xs font-medium">Full Stack</button>
+                            <button onclick="changeLayout('matrix')" id="layout-btn-matrix" class="glass-button py-2 text-xs font-medium">Split Matrix</button>
+                            <button onclick="changeLayout('pipeline')" id="layout-btn-pipeline" class="glass-button py-2 text-xs font-medium">Pipeline Row</button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-400/20 pt-2">
                         <span class="text-[10px] font-bold uppercase tracking-wider opacity-50 px-2 block mb-2">Wallpaper</span>
                         <div class="grid grid-cols-4 gap-2">
                             <button onclick="setBackground('default')" class="h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 border border-black/5 hover:scale-110 transition" title="Default"></button>
@@ -793,21 +799,19 @@
 
         document.addEventListener('click', enableNoSleep);
         document.addEventListener('touchstart', enableNoSleep);
-        // =====================================================================
-        //  UNDO / REDO — pure in-memory, never touches localStorage
-        // =====================================================================
-        const MAX_HISTORY = 50;          // cap to avoid unbounded RAM use
-        let history      = [];           // stack of JSON snapshots (past states)
-        let redoStack    = [];           // stack of JSON snapshots (future states)
-        let _suppressHistory = false;    // set true while applying undo/redo
-        let tasks        = [];           // declared here so undo/redo share the same reference
 
-        /** Call BEFORE mutating `tasks`. Records the current state. */
+        const MAX_HISTORY = 50;
+        let history      = [];
+        let redoStack    = [];
+        let _suppressHistory = false;
+        let tasks        = [];
+        let currentLayout = 'kanban'; 
+
         function pushHistory() {
             if (_suppressHistory) return;
             history.push(JSON.stringify(tasks));
             if (history.length > MAX_HISTORY) history.shift();
-            redoStack = [];              // any new action wipes redo future
+            redoStack = [];
             updateUndoRedoUI();
         }
 
@@ -856,23 +860,17 @@
             btn.addEventListener('animationend', () => btn.classList.remove('undo-flash'), { once: true });
         }
 
-        // Keyboard shortcuts — Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z
         document.addEventListener('keydown', (e) => {
             const tag = document.activeElement && document.activeElement.tagName;
-            // Don't intercept while typing in an input/textarea
             if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-
             if (e.ctrlKey || e.metaKey) {
                 if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
                 else if ((e.key === 'y') || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
             }
         });
 
-        // =====================================================================
-        //  STATE
-        // =====================================================================
         let globalTags = [];
-        let expandedSubtasks = new Set(); // UI-only: which cards have their subtask panel open
+        let expandedSubtasks = new Set();
         let teamsUsername = "";
         let userData = { xp: 0, level: 1, streak: 0 };
 
@@ -891,9 +889,6 @@
             "1614850523459-c2f4c699c52e","1618005182384-a83a8bd57fbe"
         ];
 
-        // =====================================================================
-        //  DRAG & DROP — SORTABLE WITH PLACEHOLDER
-        // =====================================================================
         let draggedTaskId = null;
         let draggedEl = null;
         let placeholder = null;
@@ -933,7 +928,6 @@
 
         function onCardDragEnd(e) {
             if (draggedEl) draggedEl.classList.remove('dragging');
-
             if (placeholder && placeholder.parentElement) {
                 const listEl = placeholder.parentElement;
                 const colEl = listEl.closest('[data-status]');
@@ -941,9 +935,7 @@
                 const task = tasks.find(t => t.id === draggedTaskId);
 
                 if (task && newStatus) {
-                    // Snapshot BEFORE mutation
                     pushHistory();
-
                     const oldStatus = task.status;
                     tasks = tasks.filter(t => t.id !== draggedTaskId);
 
@@ -969,11 +961,9 @@
                         const lastIdx = tasks.reduce((acc, t, i) => t.status === newStatus ? i : acc, -1);
                         tasks.splice(lastIdx + 1, 0, task);
                     }
-
                     saveData();
                 }
             }
-
             removePlaceholder();
             draggedTaskId = null;
             draggedEl = null;
@@ -1008,15 +998,39 @@
             if (col) col.classList.remove('drag-over');
         }
 
-        // =====================================================================
-        //  RENDER BOARD
-        // =====================================================================
+        function changeLayout(mode) {
+            currentLayout = mode;
+            localStorage.setItem('focusBoardLayout', mode);
+            
+            const grid = document.getElementById('kanban-grid');
+            if (!grid) return;
+
+            grid.className = ''; 
+            
+            if (mode === 'kanban') {
+                grid.className = 'grid grid-cols-2 lg:grid-cols-4 gap-3 h-full transition-all duration-500';
+            } else if (mode === 'stack') {
+                grid.className = 'grid grid-cols-1 gap-4 h-full overflow-y-auto max-h-full transition-all duration-500';
+            } else if (mode === 'matrix') {
+                grid.className = 'grid grid-cols-2 gap-3 h-full transition-all duration-500';
+            } else if (mode === 'pipeline') {
+                grid.className = 'flex flex-col gap-3 h-full overflow-y-auto pr-1 transition-all duration-500';
+            }
+
+            document.querySelectorAll('[id^="layout-btn-"]').forEach(btn => btn.classList.remove('active-mode'));
+            const activeBtn = document.getElementById(`layout-btn-${mode}`);
+            if (activeBtn) activeBtn.classList.add('active-mode');
+
+            showToast(`Switched to Layout Mode`);
+            renderBoard();
+        }
+
         function renderBoard() {
             const colDefs = [
-                { id: 'todo',      label: 'To Do',  icon: null,  accent: null },
-                { id: 'ongoing',   label: 'Focus',  icon: '●',   accent: 'indigo' },
-                { id: 'completed', label: 'Done',   icon: null,  accent: null },
-                { id: 'parked',    label: 'Later',  icon: null,  accent: null },
+                { id: 'todo',      label: 'To Do' },
+                { id: 'ongoing',   label: 'Focus' },
+                { id: 'completed', label: 'Done' },
+                { id: 'parked',    label: 'Later' },
             ];
 
             colDefs.forEach(({ id, label }) => {
@@ -1049,7 +1063,6 @@
                 colTasks.forEach(task => list.appendChild(buildCard(task, id)));
                 colEl.appendChild(list);
             });
-            // Re-render all lucide icons after board update
             initLucide();
         }
 
@@ -1058,24 +1071,23 @@
             const tagClass = (task.tags && task.tags.length > 0) ? `tag-${task.tags[0].color}` : "";
 
             const card = document.createElement('div');
-            card.className = `glass-card p-3 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''} ${tagClass}`;
+            card.className = `glass-card p-4 cursor-grab active:cursor-grabbing relative group ${isOngoing ? 'ongoing-task-card' : ''} ${tagClass} flex flex-col gap-2`;
             card.draggable = true;
             card.dataset.taskId = task.id;
             card.id = task.id;
 
             const estimate = task.estimate || 1;
             const completed = task.completedPomos || 0;
-            let dotsHtml = '<div class="flex gap-1 mt-2">';
+            let dotsHtml = '<div class="flex gap-1">';
             for (let i = 0; i < estimate; i++) dotsHtml += `<div class="estimate-dot ${i < completed ? 'filled' : ''}"></div>`;
             dotsHtml += '</div>';
 
             const tagsHtml = (task.tags && task.tags.length > 0)
-                ? `<div class="flex flex-wrap gap-1 mt-2">${task.tags.map((tg, i) =>
+                ? `<div class="flex flex-wrap gap-1">${task.tags.map((tg, i) =>
                     `<span onclick="removeTag('${task.id}', ${i})" class="text-[8px] opacity-90 font-bold px-2 py-0.5 rounded-full bg-${tg.color}-500/20 text-${tg.color}-500 border border-${tg.color}-500/30 cursor-pointer hover:bg-red-500 hover:text-white transition-colors">${tg.name}</span>`
                   ).join('')}</div>`
                 : '';
 
-            // ── Subtasks ──
             const subtasks = task.subtasks || [];
             const subDone = subtasks.filter(s => s.done).length;
             const subTotal = subtasks.length;
@@ -1083,7 +1095,7 @@
             const isExpanded = expandedSubtasks.has(task.id);
 
             const subtaskSummaryHtml = subTotal > 0 ? `
-                <button type="button" draggable="false" onclick="toggleSubtaskPanel('${task.id}')" class="flex items-center gap-1.5 mt-2 text-[9px] font-bold opacity-50 hover:opacity-90 transition-opacity">
+                <button type="button" draggable="false" onclick="toggleSubtaskPanel('${task.id}')" class="flex items-center gap-1.5 text-[9px] font-bold opacity-50 hover:opacity-90 transition-opacity">
                     <i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" class="lucide" style="width:11px;height:11px;"></i>
                     <span>${subDone}/${subTotal} subtasks</span>
                     <div class="h-1 w-10 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
@@ -1101,9 +1113,9 @@
                 </div>`).join('');
 
             const subtaskPanelHtml = isExpanded ? `
-                <div class="mt-2 pt-2 border-t border-black/5 dark:border-white/5" draggable="false" onmousedown="event.stopPropagation()">
+                <div class="mt-1 pt-2 border-t border-black/5 dark:border-white/5" draggable="false" onmousedown="event.stopPropagation()">
                     ${subtaskListHtml}
-                    <div class="flex items-center gap-1.5 mt-1">
+                    <div class="flex items-center gap-1.5 mt-2">
                         <input type="text" draggable="false" placeholder="Add subtask..."
                             class="subtask-add-input flex-1 bg-black/5 dark:bg-white/10 rounded-full px-2.5 py-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)]"
                             onkeydown="if(event.key==='Enter'){ event.preventDefault(); addSubtask('${task.id}', this.value); this.value=''; }">
@@ -1114,21 +1126,27 @@
                 </div>` : '';
 
             card.innerHTML = `
-                <div class="flex items-center justify-between w-full">
-                    ${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">` : ''}
-                    <div class="flex-1 min-w-0">
-                        <p class="task-text task-text-content text-xs font-semibold leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')">${task.text}</p>
+                <div class="flex items-start w-full gap-2">
+                    ${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox mt-1">` : ''}
+                    <div class="flex-1 min-w-0 w-full">
+                        <p class="task-text task-text-content text-sm font-semibold leading-relaxed break-words w-full text-left" ondblclick="enableEdit('${task.id}')">${task.text}</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between w-full mt-1 pt-2 border-t border-black/[0.03] dark:border-white/[0.03]">
+                    <div class="flex items-center gap-2">
                         ${dotsHtml}
                         ${subtaskSummaryHtml}
                     </div>
-                    <div class="task-action-btn flex gap-1 opacity-40 hover:opacity-100 transition-opacity shrink-0">
+                    
+                    <div class="task-action-btn flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
                         <button onclick="toggleSubtaskPanel('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-indigo-500 hover:text-white transition-colors" title="Subtasks">
                             <i data-lucide="list-checks" class="lucide" style="width:14px;height:14px;"></i>
                         </button>
-                        <button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors">
+                        <button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors" title="Add Tag">
                             <i data-lucide="tag" class="lucide" style="width:14px;height:14px;"></i>
                         </button>
-                        <button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors">
+                        <button onclick="deleteTask('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors" title="Delete Task">
                             <i data-lucide="x" class="lucide" style="width:14px;height:14px;"></i>
                         </button>
                     </div>
@@ -1142,9 +1160,6 @@
             return card;
         }
 
-        // =====================================================================
-        //  TASK OPERATIONS  (each calls pushHistory() before mutating tasks)
-        // =====================================================================
         function addTask(e) {
             e.preventDefault();
             const input = document.getElementById('task-input');
@@ -1208,9 +1223,6 @@
             }
         }
 
-        // =====================================================================
-        //  SUBTASKS
-        // =====================================================================
         function toggleSubtaskPanel(taskId) {
             if (expandedSubtasks.has(taskId)) expandedSubtasks.delete(taskId);
             else expandedSubtasks.add(taskId);
@@ -1259,9 +1271,6 @@
             saveData(); renderBoard();
         }
 
-        // =====================================================================
-        //  TAG PICKER
-        // =====================================================================
         function getLibraryHtml() {
             if (globalTags.length === 0) return '<p class="text-[10px] opacity-40 italic">No saved tags</p>';
             return globalTags.map(tag =>
@@ -1314,9 +1323,6 @@
             }
         }
 
-        // =====================================================================
-        //  TIMER
-        // =====================================================================
         function setTimerMode(m) {
             stopTimer(); timer.mode = m; timer.timeLeft = MODES[m]; timer.originalTime = MODES[m];
             document.querySelectorAll('#btn-pomodoro, #btn-shortBreak, #btn-longBreak').forEach(b => b.classList.remove('active-mode'));
@@ -1360,9 +1366,6 @@
             timer.timeLeft = timer.originalTime; updateTimerDisplay(); updateGamificationUI();
         }
 
-        // =====================================================================
-        //  GAMIFICATION
-        // =====================================================================
         function updateGamificationUI() {
             const level = Math.floor(Math.sqrt(userData.xp / 100)) + 1;
             const xpInCurrentLevel = userData.xp - (Math.pow(level - 1, 2) * 100);
@@ -1379,9 +1382,6 @@
         }
         function addXP(amount) { userData.xp += amount; showToast(`+${amount} XP`, 'stars'); updateGamificationUI(); }
 
-        // =====================================================================
-        //  WORK DAY
-        // =====================================================================
         function updateWorkDay() {
             const now = new Date();
             const nowTime = now.getHours() * 60 + now.getMinutes();
@@ -1424,9 +1424,6 @@
             }
         }
 
-        // =====================================================================
-        //  SETTINGS & THEME
-        // =====================================================================
         function toggleSettings() { const menu = document.getElementById('settings-menu'); if (menu) menu.classList.toggle('open'); }
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
@@ -1441,7 +1438,10 @@
         }
 
         function setBackground(type, isInitialLoad = false) {
-            if (type === 'default') document.body.style.background = 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)';
+            if (type === 'default') {
+                document.body.style.backgroundImage = 'none';
+                document.body.style.background = 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)';
+            }
             else if (type === 'nature') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2560')";
             else if (type === 'abstract') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2560')";
             else if (type === 'minimal') document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1483794344563-d27a8d1801ac?q=80&w=2560')";
@@ -1528,24 +1528,20 @@
                 if (savedSounds) { selectedAmbientUrl = savedSounds.ambient || selectedAmbientUrl; soundVolume = savedSounds.volume !== undefined ? savedSounds.volume : 0.5; document.getElementById('ambient-choice').value = selectedAmbientUrl; document.getElementById('volume-control').value = soundVolume; document.getElementById('volume-val').innerText = `${Math.round(soundVolume * 100)}%`; }
                 const ambient = document.getElementById('ambient-sound'); if (ambient) { ambient.src = selectedAmbientUrl; ambient.volume = soundVolume; }
             } catch(e) {}
+            
+            const savedLayout = localStorage.getItem('focusBoardLayout') || 'kanban';
+            changeLayout(savedLayout);
         }
 
-        // =====================================================================
-        //  EXPORT / IMPORT CSV
-        // =====================================================================
         function exportCSV() {
             if (tasks.length === 0) { showToast('No tasks to export', 'info'); return; }
-
             const headers = ['id', 'text', 'status', 'estimate', 'completedPomos', 'tags', 'subtasks'];
             const rows = tasks.map(t => {
-                const tagsStr = (t.tags && t.tags.length > 0)
-                    ? t.tags.map(tg => `${tg.name}:${tg.color}`).join('|')
-                    : '';
+                const tagsStr = (t.tags && t.tags.length > 0) ? t.tags.map(tg => `${tg.name}:${tg.color}`).join('|') : '';
                 const safeText = `"${(t.text || '').replace(/"/g, '""')}"`;
                 const safeSubtasks = `"${JSON.stringify(t.subtasks || []).replace(/"/g, '""')}"`;
                 return [t.id, safeText, t.status, t.estimate || 1, t.completedPomos || 0, `"${tagsStr}"`, safeSubtasks].join(',');
             });
-
             const csv = [headers.join(','), ...rows].join('\n');
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -1558,21 +1554,17 @@
         }
 
         function importCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
                     const lines = e.target.result.trim().split('\n');
                     if (lines.length < 2) { showToast('CSV appears empty', 'error'); return; }
-
                     const headerLine = lines[0].toLowerCase();
                     const hasHeaders = headerLine.includes('text') && headerLine.includes('status');
                     const dataLines = hasHeaders ? lines.slice(1) : lines;
-
                     const parseCSVRow = (line) => {
-                        const result = [];
-                        let current = ''; let inQuotes = false;
+                        const result = []; let current = ''; let inQuotes = false;
                         for (let i = 0; i < line.length; i++) {
                             const ch = line[i];
                             if (ch === '"') {
@@ -1581,90 +1573,44 @@
                             } else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
                             else current += ch;
                         }
-                        result.push(current);
-                        return result;
+                        result.push(current); return result;
                     };
-
                     const validStatuses = ['todo', 'ongoing', 'completed', 'parked'];
                     const imported = [];
-
                     dataLines.forEach((line, idx) => {
                         line = line.trim(); if (!line) return;
                         const cols = parseCSVRow(line);
-
                         let id, text, status, estimate, completedPomos, tagsRaw, subtasksRaw;
-
-                        if (hasHeaders) {
-                            // Structured: id, text, status, estimate, completedPomos, tags, subtasks
-                            [id, text, status, estimate, completedPomos, tagsRaw, subtasksRaw] = cols;
-                        } else {
-                            // Loose format: at minimum just a text column
-                            text = cols[0]; status = cols[1] || 'todo'; estimate = cols[2];
-                        }
-
-                        text = (text || '').trim();
-                        if (!text) return;
-
+                        if (hasHeaders) { [id, text, status, estimate, completedPomos, tagsRaw, subtasksRaw] = cols; }
+                        else { text = cols[0]; status = cols[1] || 'todo'; estimate = cols[2]; }
+                        text = (text || '').trim(); if (!text) return;
                         status = (status || 'todo').trim().toLowerCase();
                         if (!validStatuses.includes(status)) status = 'todo';
-
-                        const tags = (tagsRaw || '').trim()
-                            ? tagsRaw.trim().split('|').map(s => {
-                                const [name, color] = s.split(':');
-                                return { name: name || s, color: color || 'blue' };
-                              }).filter(t => t.name)
-                            : [];
-
+                        const tags = (tagsRaw || '').trim() ? tagsRaw.trim().split('|').map(s => { const [name, color] = s.split(':'); return { name: name || s, color: color || 'blue' }; }).filter(t => t.name) : [];
                         let subtasksParsed = [];
-                        try { subtasksParsed = subtasksRaw ? JSON.parse(subtasksRaw) : []; } catch (e) { subtasksParsed = []; }
+                        try { subtasksParsed = subtasksRaw ? JSON.parse(subtasksRaw) : []; } catch (err) { subtasksParsed = []; }
                         if (!Array.isArray(subtasksParsed)) subtasksParsed = [];
-
-                        imported.push({
-                            id: (id && id.trim() && !isNaN(id.trim())) ? id.trim() : `${Date.now()}${idx}`,
-                            text, status, tags,
-                            estimate: parseInt(estimate) || 1,
-                            completedPomos: parseInt(completedPomos) || 0,
-                            subtasks: subtasksParsed
-                        });
+                        imported.push({ id: (id && id.trim() && !isNaN(id.trim())) ? id.trim() : `${Date.now()}${idx}`, text, status, tags, estimate: parseInt(estimate) || 1, completedPomos: parseInt(completedPomos) || 0, subtasks: subtasksParsed });
                     });
-
                     if (imported.length === 0) { showToast('No valid rows found', 'error'); return; }
-
                     Swal.fire({
                         title: `Import ${imported.length} task${imported.length !== 1 ? 's' : ''}?`,
-                        html: `<div class="text-sm opacity-70">
-                            <p class="mb-3">Choose how to handle existing tasks:</p>
-                            <div class="flex flex-col gap-2">
-                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="import-mode" value="merge" checked> <span>Merge (add alongside existing)</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="import-mode" value="replace"> <span>Replace (clear existing first)</span></label>
-                            </div>
-                        </div>`,
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Import',
-                        width: 360,
+                        html: `<div class="text-sm opacity-70"><p class="mb-3">Choose how to handle existing tasks:</p><div class="flex flex-col gap-2"><label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="import-mode" value="merge" checked> <span>Merge (add alongside existing)</span></label><label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="import-mode" value="replace"> <span>Replace (clear existing first)</span></label></div></div>`,
+                        icon: 'question', showCancelButton: true, confirmButtonText: 'Import', width: 360,
                     }).then(result => {
                         if (!result.isConfirmed) return;
                         const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'merge';
                         pushHistory();
                         if (mode === 'replace') tasks = imported;
                         else tasks = [...tasks, ...imported];
-                        saveData(); renderBoard();
-                        showToast(`Imported ${imported.length} tasks`, 'check_circle');
+                        saveData(); renderBoard(); showToast(`Imported ${imported.length} tasks`);
                     });
-                } catch (err) {
-                    console.error('CSV import error:', err);
-                    showToast('Failed to parse CSV', 'error');
-                }
-                // Reset input so the same file can be re-imported
+                } catch (err) { console.error('CSV import error:', err); showToast('Failed to parse CSV', 'error'); }
                 event.target.value = '';
             };
             reader.readAsText(file);
         }
 
-        // =====================================================================
-        //  REPORT & MISC
-        // =====================================================================
         function toggleFocusMode() { isFocusMode = !isFocusMode; document.body.classList.toggle('focus-active'); showToast(isFocusMode ? 'Focus Active' : 'Focus Exited'); renderBoard(); }
 
         async function generateReport() {
@@ -1692,27 +1638,21 @@
         function clearAllData() {
             Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{
                 if(r.isConfirmed) {
-                    pushHistory();
-                    tasks=[]; userData = { xp: 0, level: 1, streak: 0 };
+                    pushHistory(); tasks=[]; userData = { xp: 0, level: 1, streak: 0 };
                     saveData(); renderBoard(); updateGamificationUI(); showToast('Cleared');
                 }
             });
         }
-        // Lucide icon swap helper
+        
         function setLucideIcon(elId, iconName) {
             if (typeof lucide === 'undefined') return;
-            const el = document.getElementById(elId);
-            if (!el) return;
-            el.setAttribute('data-lucide', iconName);
-            lucide.createIcons({ nodes: [el] });
+            const el = document.getElementById(elId); if (!el) return;
+            el.setAttribute('data-lucide', iconName); lucide.createIcons({ nodes: [el] });
         }
 
-        function initLucide() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
+        function initLucide() { if (typeof lucide !== 'undefined') lucide.createIcons(); }
 
         function showToast(msg, icon = 'check-circle') {
-            // Map old material icon names to lucide equivalents
             const iconMap = { 'check_circle': 'check-circle', 'undo': 'undo-2', 'redo': 'redo-2', 'stars': 'star', 'energy_savings_leaf': 'leaf', 'download': 'download', 'error': 'alert-circle', 'info': 'info' };
             const lucideIcon = iconMap[icon] || icon;
             const t = document.getElementById('toast');
@@ -1726,17 +1666,12 @@
             }
         }
 
-        // =====================================================================
-        //  INIT
-        // =====================================================================
         document.addEventListener('DOMContentLoaded', () => {
             loadData(); loadSettings(); renderBoard(); updateTimerDisplay(); updateGamificationUI();
             updateWorkDay(); setInterval(updateWorkDay, 60000);
-            updateUndoRedoUI(); // initialise button states
-            // Initialise all lucide icons (also fires on window load as fallback)
+            updateUndoRedoUI();
             initLucide();
             window.addEventListener('load', initLucide);
-            // Set correct theme icon on load
             const isDark = document.documentElement.classList.contains('dark');
             setLucideIcon('theme-icon', isDark ? 'sun' : 'moon');
             document.addEventListener('click', (e) => {
