@@ -872,6 +872,7 @@
         //  STATE
         // =====================================================================
         let globalTags = [];
+        let expandedSubtasks = new Set(); // UI-only: which cards have their subtask panel open
         let teamsUsername = "";
         let userData = { xp: 0, level: 1, streak: 0 };
 
@@ -1074,14 +1075,56 @@
                   ).join('')}</div>`
                 : '';
 
+            // ── Subtasks ──
+            const subtasks = task.subtasks || [];
+            const subDone = subtasks.filter(s => s.done).length;
+            const subTotal = subtasks.length;
+            const subPct = subTotal > 0 ? Math.round((subDone / subTotal) * 100) : 0;
+            const isExpanded = expandedSubtasks.has(task.id);
+
+            const subtaskSummaryHtml = subTotal > 0 ? `
+                <button type="button" draggable="false" onclick="toggleSubtaskPanel('${task.id}')" class="flex items-center gap-1.5 mt-2 text-[9px] font-bold opacity-50 hover:opacity-90 transition-opacity">
+                    <i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" class="lucide" style="width:11px;height:11px;"></i>
+                    <span>${subDone}/${subTotal} subtasks</span>
+                    <div class="h-1 w-10 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full bg-[var(--accent-color)]" style="width:${subPct}%"></div>
+                    </div>
+                </button>` : '';
+
+            const subtaskListHtml = subtasks.map(st => `
+                <div class="flex items-center gap-2 py-1 group/sub">
+                    <input type="checkbox" draggable="false" ${st.done ? 'checked' : ''} onchange="toggleSubtaskDone('${task.id}','${st.id}')" class="w-3.5 h-3.5 shrink-0 cursor-pointer accent-[var(--accent-color)]">
+                    <span class="flex-1 text-[11px] break-words ${st.done ? 'line-through opacity-40' : 'opacity-80'}">${st.text}</span>
+                    <button type="button" draggable="false" onclick="deleteSubtask('${task.id}','${st.id}')" class="opacity-0 group-hover/sub:opacity-60 hover:!opacity-100 hover:text-red-500 transition-opacity shrink-0">
+                        <i data-lucide="x" class="lucide" style="width:11px;height:11px;"></i>
+                    </button>
+                </div>`).join('');
+
+            const subtaskPanelHtml = isExpanded ? `
+                <div class="mt-2 pt-2 border-t border-black/5 dark:border-white/5" draggable="false" onmousedown="event.stopPropagation()">
+                    ${subtaskListHtml}
+                    <div class="flex items-center gap-1.5 mt-1">
+                        <input type="text" draggable="false" placeholder="Add subtask..."
+                            class="subtask-add-input flex-1 bg-black/5 dark:bg-white/10 rounded-full px-2.5 py-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)]"
+                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); addSubtask('${task.id}', this.value); this.value=''; }">
+                        <button type="button" draggable="false" onclick="const inp=this.previousElementSibling; addSubtask('${task.id}', inp.value); inp.value=''; inp.focus();" class="w-6 h-6 rounded-full glass-button flex items-center justify-center shrink-0 border-none">
+                            <i data-lucide="plus" class="lucide" style="width:12px;height:12px;"></i>
+                        </button>
+                    </div>
+                </div>` : '';
+
             card.innerHTML = `
                 <div class="flex items-center justify-between w-full">
                     ${isOngoing && isFocusMode ? `<input type="checkbox" onchange="completeTaskFromFocus('${task.id}')" class="focus-mode-checkbox">` : ''}
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <p class="task-text task-text-content text-xs font-semibold leading-relaxed break-words pr-4" ondblclick="enableEdit('${task.id}')">${task.text}</p>
                         ${dotsHtml}
+                        ${subtaskSummaryHtml}
                     </div>
                     <div class="task-action-btn flex gap-1 opacity-40 hover:opacity-100 transition-opacity shrink-0">
+                        <button onclick="toggleSubtaskPanel('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-indigo-500 hover:text-white transition-colors" title="Subtasks">
+                            <i data-lucide="list-checks" class="lucide" style="width:14px;height:14px;"></i>
+                        </button>
                         <button onclick="openTagPicker('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-blue-500 hover:text-white transition-colors">
                             <i data-lucide="tag" class="lucide" style="width:14px;height:14px;"></i>
                         </button>
@@ -1091,6 +1134,7 @@
                     </div>
                 </div>
                 ${tagsHtml}
+                ${subtaskPanelHtml}
             `;
 
             card.addEventListener('dragstart', onCardDragStart);
@@ -1108,7 +1152,7 @@
             const text = input.value.trim();
             if (text) {
                 pushHistory();
-                tasks.push({ id: Date.now().toString(), text, status: 'todo', tags: [], estimate: est, completedPomos: 0 });
+                tasks.push({ id: Date.now().toString(), text, status: 'todo', tags: [], estimate: est, completedPomos: 0, subtasks: [] });
                 saveData(); renderBoard(); input.value = '';
                 showToast('Task Added');
             }
@@ -1162,6 +1206,57 @@
                 t.status = 'completed';
                 addXP(50); saveData(); showToast('Done!'); renderBoard();
             }
+        }
+
+        // =====================================================================
+        //  SUBTASKS
+        // =====================================================================
+        function toggleSubtaskPanel(taskId) {
+            if (expandedSubtasks.has(taskId)) expandedSubtasks.delete(taskId);
+            else expandedSubtasks.add(taskId);
+            renderBoard();
+            if (expandedSubtasks.has(taskId)) {
+                requestAnimationFrame(() => {
+                    const cardEl = document.getElementById(taskId);
+                    const input = cardEl && cardEl.querySelector('.subtask-add-input');
+                    if (input) input.focus();
+                });
+            }
+        }
+
+        function addSubtask(taskId, text) {
+            text = (text || '').trim();
+            if (!text) return;
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            pushHistory();
+            if (!task.subtasks) task.subtasks = [];
+            task.subtasks.push({ id: `st-${Date.now()}-${Math.floor(Math.random() * 1000)}`, text, done: false });
+            expandedSubtasks.add(taskId);
+            saveData(); renderBoard();
+            requestAnimationFrame(() => {
+                const cardEl = document.getElementById(taskId);
+                const input = cardEl && cardEl.querySelector('.subtask-add-input');
+                if (input) input.focus();
+            });
+        }
+
+        function toggleSubtaskDone(taskId, subId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || !task.subtasks) return;
+            const st = task.subtasks.find(s => s.id === subId);
+            if (!st) return;
+            pushHistory();
+            st.done = !st.done;
+            saveData(); renderBoard();
+        }
+
+        function deleteSubtask(taskId, subId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || !task.subtasks) return;
+            pushHistory();
+            task.subtasks = task.subtasks.filter(s => s.id !== subId);
+            saveData(); renderBoard();
         }
 
         // =====================================================================
@@ -1441,13 +1536,14 @@
         function exportCSV() {
             if (tasks.length === 0) { showToast('No tasks to export', 'info'); return; }
 
-            const headers = ['id', 'text', 'status', 'estimate', 'completedPomos', 'tags'];
+            const headers = ['id', 'text', 'status', 'estimate', 'completedPomos', 'tags', 'subtasks'];
             const rows = tasks.map(t => {
                 const tagsStr = (t.tags && t.tags.length > 0)
                     ? t.tags.map(tg => `${tg.name}:${tg.color}`).join('|')
                     : '';
                 const safeText = `"${(t.text || '').replace(/"/g, '""')}"`;
-                return [t.id, safeText, t.status, t.estimate || 1, t.completedPomos || 0, `"${tagsStr}"`].join(',');
+                const safeSubtasks = `"${JSON.stringify(t.subtasks || []).replace(/"/g, '""')}"`;
+                return [t.id, safeText, t.status, t.estimate || 1, t.completedPomos || 0, `"${tagsStr}"`, safeSubtasks].join(',');
             });
 
             const csv = [headers.join(','), ...rows].join('\n');
@@ -1496,11 +1592,11 @@
                         line = line.trim(); if (!line) return;
                         const cols = parseCSVRow(line);
 
-                        let id, text, status, estimate, completedPomos, tagsRaw;
+                        let id, text, status, estimate, completedPomos, tagsRaw, subtasksRaw;
 
                         if (hasHeaders) {
-                            // Structured: id, text, status, estimate, completedPomos, tags
-                            [id, text, status, estimate, completedPomos, tagsRaw] = cols;
+                            // Structured: id, text, status, estimate, completedPomos, tags, subtasks
+                            [id, text, status, estimate, completedPomos, tagsRaw, subtasksRaw] = cols;
                         } else {
                             // Loose format: at minimum just a text column
                             text = cols[0]; status = cols[1] || 'todo'; estimate = cols[2];
@@ -1519,11 +1615,16 @@
                               }).filter(t => t.name)
                             : [];
 
+                        let subtasksParsed = [];
+                        try { subtasksParsed = subtasksRaw ? JSON.parse(subtasksRaw) : []; } catch (e) { subtasksParsed = []; }
+                        if (!Array.isArray(subtasksParsed)) subtasksParsed = [];
+
                         imported.push({
                             id: (id && id.trim() && !isNaN(id.trim())) ? id.trim() : `${Date.now()}${idx}`,
                             text, status, tags,
                             estimate: parseInt(estimate) || 1,
-                            completedPomos: parseInt(completedPomos) || 0
+                            completedPomos: parseInt(completedPomos) || 0,
+                            subtasks: subtasksParsed
                         });
                     });
 
