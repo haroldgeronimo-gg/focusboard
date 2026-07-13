@@ -37,10 +37,6 @@
             }
         }
     </script>
-    <!-- Compression & Encryption Core Dependencies -->
-    <script src="js/lz-string.min.js"></script>
-    <script src="js/crypto-js.min.js"></script>
-    
     <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -779,8 +775,8 @@
         <span id="toast-msg">Notification</span>
     </div>
 
-    <audio id="alarm-sound" src="audio/beep_short.ogg" preload="auto"></audio>
-    <audio id="ambient-sound" src="audio/ambient_hum_air_conditioner.ogg" loop preload="auto"></audio>
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+    <audio id="ambient-sound" src="https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg" loop preload="auto"></audio>
 
     <script>
         let noSleep = null;
@@ -811,49 +807,12 @@
         let tasks        = [];
         let currentLayout = 'kanban'; 
         
-        // Cryptographic passphrase initialization signature
-        const CRYPTO_PASS = "FocusBoardSecureCanvasKey2026";
-
         let columnSortSettings = {
             todo: 'date-old',
             ongoing: 'date-old',
             completed: 'date-old',
             parked: 'date-old'
         };
-
-        // =====================================================================
-        //  ENCRYPTION & COMPRESSION ENGINE
-        // =====================================================================
-        function packData(rawJsonString) {
-            try {
-                // Step 1: Encrypt plaintext using AES-256 algorithm
-                const encrypted = CryptoJS.AES.encrypt(rawJsonString, CRYPTO_PASS).toString();
-                // Step 2: Compress encrypted block into standard UTF16 format optimized for localStorage
-                return LZString.compressToUTF16(encrypted);
-            } catch (err) {
-                console.error("Pack stream layout failure:", err);
-                return null;
-            }
-        }
-
-        function unpackData(packedString) {
-            if (!packedString) return null;
-            try {
-                // Check if data is legacy plaintext or compressed/encrypted
-                if (packedString.startsWith('[') || packedString.startsWith('{')) {
-                    return packedString; // Return directly if legacy raw JSON format
-                }
-                // Step 1: Decompress valid character block
-                const decompressed = LZString.decompressFromUTF16(packedString);
-                if (!decompressed) return null;
-                // Step 2: Decrypt signature sequence block back to JSON string
-                const bytes = CryptoJS.AES.decrypt(decompressed, CRYPTO_PASS);
-                return bytes.toString(CryptoJS.enc.Utf8);
-            } catch (err) {
-                console.error("Unpack stream payload extraction failure:", err);
-                return null;
-            }
-        }
 
         function pushHistory() {
             if (_suppressHistory) return;
@@ -1766,6 +1725,7 @@
                             tasks = [...tasks, ...imported];
                         }
                         
+                        // Enforce sorting across all modified column tracks
                         const affectedStatuses = [...new Set(imported.map(t => t.status))];
                         affectedStatuses.forEach(status => {
                             const rule = columnSortSettings[status] || 'date-old';
@@ -1801,37 +1761,20 @@
             }
         }
 
-        // Modified transparent data hooks using crypt-compression stream transformations
         function saveData() { 
-            const packedTasks = packData(JSON.stringify(tasks));
-            const packedUser = packData(JSON.stringify(userData));
-            const packedSorting = packData(JSON.stringify(columnSortSettings));
-
-            if(packedTasks) localStorage.setItem('pomodoroKanbanTasks', packedTasks); 
-            if(packedUser) localStorage.setItem('focusBoardUser', packedUser); 
-            if(packedSorting) localStorage.setItem('focusBoardColumnSorting', packedSorting);
+            localStorage.setItem('pomodoroKanbanTasks', JSON.stringify(tasks)); 
+            localStorage.setItem('focusBoardUser', JSON.stringify(userData)); 
+            localStorage.setItem('focusBoardColumnSorting', JSON.stringify(columnSortSettings));
         }
-        
         function loadData() {
-            try { 
-                const rawTasks = localStorage.getItem('pomodoroKanbanTasks');
-                tasks = JSON.parse(unpackData(rawTasks)) || []; 
-            } catch(e) { tasks = []; }
-            
+            try { tasks = JSON.parse(localStorage.getItem('pomodoroKanbanTasks')) || []; } catch(e) { tasks = []; }
             try { globalTags = JSON.parse(localStorage.getItem('focusBoardGlobalTags')) || []; } catch(e) { globalTags = []; }
-            
+            try { userData = JSON.parse(localStorage.getItem('focusBoardUser')) || { xp: 0, level: 1, streak: 0 }; } catch(e) { userData = { xp: 0, level: 1, streak: 0 }; }
             try { 
-                const rawUser = localStorage.getItem('focusBoardUser');
-                userData = JSON.parse(unpackData(rawUser)) || { xp: 0, level: 1, streak: 0 }; 
-            } catch(e) { userData = { xp: 0, level: 1, streak: 0 }; }
-            
-            try { 
-                const rawSorting = localStorage.getItem('focusBoardColumnSorting');
-                const savedSorting = JSON.parse(unpackData(rawSorting)); 
+                const savedSorting = JSON.parse(localStorage.getItem('focusBoardColumnSorting')); 
                 if (savedSorting) columnSortSettings = savedSorting;
             } catch(e) {}
         }
-        
         function clearAllData() {
             Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{
                 if(r.isConfirmed) {
