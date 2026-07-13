@@ -806,6 +806,13 @@
         let _suppressHistory = false;
         let tasks        = [];
         let currentLayout = 'kanban'; 
+        
+        let columnSortSettings = {
+            todo: 'date-old',
+            ongoing: 'date-old',
+            completed: 'date-old',
+            parked: 'date-old'
+        };
 
         function pushHistory() {
             if (_suppressHistory) return;
@@ -1025,14 +1032,28 @@
             renderBoard();
         }
 
+        function executionSortEngine(subTasksArray, criteria) {
+            if (criteria === 'date-new') {
+                subTasksArray.sort((a, b) => parseFloat(b.id) - parseFloat(a.id));
+            } else if (criteria === 'date-old') {
+                subTasksArray.sort((a, b) => parseFloat(a.id) - parseFloat(b.id));
+            } else if (criteria === 'subtasks') {
+                subTasksArray.sort((a, b) => ((b.subtasks || []).length) - ((a.subtasks || []).length));
+            } else if (criteria === 'estimate') {
+                subTasksArray.sort((a, b) => (b.estimate || 1) - (a.estimate || 1));
+            }
+            return subTasksArray;
+        }
+
         async function triggerColumnSort(status) {
             const { value: sortOption } = await Swal.fire({
                 title: 'Sort Column Tasks',
-                text: 'Select sorting criteria (updates board order instantly):',
+                text: 'Select sorting criteria (updates layout order persistently):',
                 icon: 'info',
                 showCancelButton: true,
                 confirmButtonText: 'Sort',
                 input: 'select',
+                inputValue: columnSortSettings[status] || 'date-old',
                 inputOptions: {
                     'date-new': 'Date Added: Newest First',
                     'date-old': 'Date Added: Oldest First',
@@ -1041,25 +1062,18 @@
                 },
                 inputPlaceholder: 'Select criteria',
                 inputValidator: (value) => {
-                    if (!value) return 'You need to select a configuration options!';
+                    if (!value) return 'You need to select a configuration option!';
                 }
             });
 
             if (sortOption) {
                 pushHistory();
-
+                columnSortSettings[status] = sortOption;
+                
                 const independentTasks = tasks.filter(t => t.status !== status);
-                const targetedTasks = tasks.filter(t => t.status === status);
+                let targetedTasks = tasks.filter(t => t.status === status);
 
-                if (sortOption === 'date-new') {
-                    targetedTasks.sort((a, b) => parseFloat(b.id) - parseFloat(a.id));
-                } else if (sortOption === 'date-old') {
-                    targetedTasks.sort((a, b) => parseFloat(a.id) - parseFloat(b.id));
-                } else if (sortOption === 'subtasks') {
-                    targetedTasks.sort((a, b) => ((b.subtasks || []).length) - ((a.subtasks || []).length));
-                } else if (sortOption === 'estimate') {
-                    targetedTasks.sort((a, b) => (b.estimate || 1) - (a.estimate || 1));
-                }
+                targetedTasks = executionSortEngine(targetedTasks, sortOption);
 
                 tasks = [...independentTasks, ...targetedTasks];
                 saveData();
@@ -1216,7 +1230,27 @@
             const text = input.value.trim();
             if (text) {
                 pushHistory();
-                tasks.push({ id: Date.now().toString(), text, status: 'todo', tags: [], estimate: est, completedPomos: 0, subtasks: [] });
+                
+                const newTask = { 
+                    id: Date.now().toString(), 
+                    text, 
+                    status: 'todo', 
+                    tags: [], 
+                    estimate: est, 
+                    completedPomos: 0, 
+                    subtasks: [] 
+                };
+                
+                const independentTasks = tasks.filter(t => t.status !== 'todo');
+                let targetedTasks = tasks.filter(t => t.status === 'todo');
+                
+                targetedTasks.push(newTask);
+                
+                const currentTodoRule = columnSortSettings['todo'] || 'date-old';
+                targetedTasks = executionSortEngine(targetedTasks, currentTodoRule);
+                
+                tasks = [...independentTasks, ...targetedTasks];
+                
                 saveData(); renderBoard(); input.value = '';
                 showToast('Task Added');
             }
@@ -1268,6 +1302,15 @@
             if (t) {
                 pushHistory();
                 t.status = 'completed';
+                
+                const currentDoneRule = columnSortSettings['completed'] || 'date-old';
+                const independentTasks = tasks.filter(x => x.id !== id && x.status !== 'completed');
+                let targetedTasks = tasks.filter(x => x.id !== id && x.status === 'completed');
+                targetedTasks.push(t);
+                targetedTasks = executionSortEngine(targetedTasks, currentDoneRule);
+                
+                tasks = [...independentTasks, ...targetedTasks];
+                
                 addXP(50); saveData(); showToast('Done!'); renderBoard();
             }
         }
@@ -1294,6 +1337,15 @@
             if (!task.subtasks) task.subtasks = [];
             task.subtasks.push({ id: `st-${Date.now()}-${Math.floor(Math.random() * 1000)}`, text, done: false });
             expandedSubtasks.add(taskId);
+            
+            const currentColumnRule = columnSortSettings[task.status] || 'date-old';
+            if (currentColumnRule === 'subtasks') {
+                const independentTasks = tasks.filter(t => t.status !== task.status);
+                let targetedTasks = tasks.filter(t => t.status === task.status);
+                targetedTasks = executionSortEngine(targetedTasks, currentColumnRule);
+                tasks = [...independentTasks, ...targetedTasks];
+            }
+            
             saveData(); renderBoard();
             requestAnimationFrame(() => {
                 const cardEl = document.getElementById(taskId);
@@ -1317,6 +1369,15 @@
             if (!task || !task.subtasks) return;
             pushHistory();
             task.subtasks = task.subtasks.filter(s => s.id !== subId);
+            
+            const currentColumnRule = columnSortSettings[task.status] || 'date-old';
+            if (currentColumnRule === 'subtasks') {
+                const independentTasks = tasks.filter(t => t.status !== task.status);
+                let targetedTasks = tasks.filter(t => t.status === task.status);
+                targetedTasks = executionSortEngine(targetedTasks, currentColumnRule);
+                tasks = [...independentTasks, ...targetedTasks];
+            }
+            
             saveData(); renderBoard();
         }
 
@@ -1406,7 +1467,14 @@
             if (timer.mode === 'pomodoro') {
                 userData.streak++;
                 addXP(25 + (userData.streak * 5));
-                tasks.filter(t => t.status === 'ongoing').forEach(t => { t.completedPomos = (t.completedPomos || 0) + 1; });
+                
+                const currentOngoingRule = columnSortSettings['ongoing'] || 'date-old';
+                const independentTasks = tasks.filter(t => t.status !== 'ongoing');
+                let targetedTasks = tasks.filter(t => t.status === 'ongoing');
+                targetedTasks.forEach(t => { t.completedPomos = (t.completedPomos || 0) + 1; });
+                targetedTasks = executionSortEngine(targetedTasks, currentOngoingRule);
+                tasks = [...independentTasks, ...targetedTasks];
+                
                 renderBoard(); showToast("Focus Finished!");
             } else {
                 showToast("Break Finished!", "energy_savings_leaf");
@@ -1650,8 +1718,23 @@
                         if (!result.isConfirmed) return;
                         const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'merge';
                         pushHistory();
-                        if (mode === 'replace') tasks = imported;
-                        else tasks = [...tasks, ...imported];
+                        
+                        if (mode === 'replace') {
+                            tasks = imported;
+                        } else {
+                            tasks = [...tasks, ...imported];
+                        }
+                        
+                        // Enforce sorting across all modified column tracks
+                        const affectedStatuses = [...new Set(imported.map(t => t.status))];
+                        affectedStatuses.forEach(status => {
+                            const rule = columnSortSettings[status] || 'date-old';
+                            const independent = tasks.filter(t => t.status !== status);
+                            let targeted = tasks.filter(t => t.status === status);
+                            targeted = executionSortEngine(targeted, rule);
+                            tasks = [...independent, ...targeted];
+                        });
+                        
                         saveData(); renderBoard(); showToast(`Imported ${imported.length} tasks`);
                     });
                 } catch (err) { console.error('CSV import error:', err); showToast('Failed to parse CSV', 'error'); }
@@ -1678,11 +1761,19 @@
             }
         }
 
-        function saveData() { localStorage.setItem('pomodoroKanbanTasks', JSON.stringify(tasks)); localStorage.setItem('focusBoardUser', JSON.stringify(userData)); }
+        function saveData() { 
+            localStorage.setItem('pomodoroKanbanTasks', JSON.stringify(tasks)); 
+            localStorage.setItem('focusBoardUser', JSON.stringify(userData)); 
+            localStorage.setItem('focusBoardColumnSorting', JSON.stringify(columnSortSettings));
+        }
         function loadData() {
             try { tasks = JSON.parse(localStorage.getItem('pomodoroKanbanTasks')) || []; } catch(e) { tasks = []; }
             try { globalTags = JSON.parse(localStorage.getItem('focusBoardGlobalTags')) || []; } catch(e) { globalTags = []; }
             try { userData = JSON.parse(localStorage.getItem('focusBoardUser')) || { xp: 0, level: 1, streak: 0 }; } catch(e) { userData = { xp: 0, level: 1, streak: 0 }; }
+            try { 
+                const savedSorting = JSON.parse(localStorage.getItem('focusBoardColumnSorting')); 
+                if (savedSorting) columnSortSettings = savedSorting;
+            } catch(e) {}
         }
         function clearAllData() {
             Swal.fire({ title: 'Clear All?', icon:'warning', showCancelButton:true }).then(r=>{
