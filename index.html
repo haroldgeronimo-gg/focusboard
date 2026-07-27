@@ -1169,7 +1169,7 @@
             const subtaskListHtml = subtasks.map(st => `
                 <div class="flex items-center gap-2 py-1 group/sub">
                     <input type="checkbox" draggable="false" ${st.done ? 'checked' : ''} onchange="toggleSubtaskDone('${task.id}','${st.id}')" class="w-3.5 h-3.5 shrink-0 cursor-pointer accent-[var(--accent-color)]">
-                    <span class="flex-1 text-[11px] break-words ${st.done ? 'line-through opacity-40' : 'opacity-80'}">${st.text}</span>
+                    <span id="subtask-span-${st.id}" ondblclick="editSubtask('${task.id}', '${st.id}')" class="flex-1 text-[11px] break-words cursor-text ${st.done ? 'line-through opacity-40' : 'opacity-80'}" title="Double-click to edit">${st.text}</span>
                     <button type="button" draggable="false" onclick="deleteSubtask('${task.id}','${st.id}')" class="opacity-0 group-hover/sub:opacity-60 hover:!opacity-100 hover:text-red-500 transition-opacity shrink-0">
                         <i data-lucide="x" class="lucide" style="width:11px;height:11px;"></i>
                     </button>
@@ -1297,6 +1297,38 @@
             p.replaceWith(input); input.focus();
         }
 
+        function editSubtask(taskId, subId) {
+            const span = document.getElementById(`subtask-span-${subId}`);
+            if (!span) return;
+            
+            const originalText = span.innerText;
+            const input = document.createElement('input');
+            input.value = originalText;
+            input.className = 'flex-1 bg-transparent border-b border-[var(--text-main)] outline-none text-[11px] text-[var(--text-main)]';
+            
+            input.onblur = () => {
+                const newText = input.value.trim();
+                if (newText && newText !== originalText) {
+                    pushHistory();
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task && task.subtasks) {
+                        const st = task.subtasks.find(s => s.id === subId);
+                        if (st) st.text = newText;
+                    }
+                    saveData();
+                }
+                renderBoard();
+            };
+            
+            input.onkeydown = (e) => { 
+                if (e.key === 'Enter') input.blur(); 
+                if (e.key === 'Escape') { input.value = originalText; input.blur(); } 
+            };
+            
+            span.replaceWith(input); 
+            input.focus();
+        }
+
         function completeTaskFromFocus(id) {
             const t = tasks.find(x => x.id === id);
             if (t) {
@@ -1338,14 +1370,6 @@
             task.subtasks.push({ id: `st-${Date.now()}-${Math.floor(Math.random() * 1000)}`, text, done: false });
             expandedSubtasks.add(taskId);
             
-            const currentColumnRule = columnSortSettings[task.status] || 'date-old';
-            if (currentColumnRule === 'subtasks') {
-                const independentTasks = tasks.filter(t => t.status !== task.status);
-                let targetedTasks = tasks.filter(t => t.status === task.status);
-                targetedTasks = executionSortEngine(targetedTasks, currentColumnRule);
-                tasks = [...independentTasks, ...targetedTasks];
-            }
-            
             saveData(); renderBoard();
             requestAnimationFrame(() => {
                 const cardEl = document.getElementById(taskId);
@@ -1369,14 +1393,6 @@
             if (!task || !task.subtasks) return;
             pushHistory();
             task.subtasks = task.subtasks.filter(s => s.id !== subId);
-            
-            const currentColumnRule = columnSortSettings[task.status] || 'date-old';
-            if (currentColumnRule === 'subtasks') {
-                const independentTasks = tasks.filter(t => t.status !== task.status);
-                let targetedTasks = tasks.filter(t => t.status === task.status);
-                targetedTasks = executionSortEngine(targetedTasks, currentColumnRule);
-                tasks = [...independentTasks, ...targetedTasks];
-            }
             
             saveData(); renderBoard();
         }
